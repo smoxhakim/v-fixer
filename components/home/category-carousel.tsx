@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
@@ -15,7 +15,7 @@ import {
   Cable,
   Activity,
 } from "lucide-react";
-import { categories, type Category } from "@/data/categories";
+import { getCategories } from "@/lib/api";
 
 const iconMap: Record<string, React.ReactNode> = {
   Tablet: <Tablet className="h-7 w-7" />,
@@ -30,8 +30,15 @@ const iconMap: Record<string, React.ReactNode> = {
   Activity: <Activity className="h-7 w-7" />,
 };
 
+type Category = any;
+
 export function CategoryCarousel() {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    getCategories().then(setCategories).catch(console.error);
+  }, []);
 
   const scroll = (dir: "left" | "right") => {
     if (!scrollRef.current) return;

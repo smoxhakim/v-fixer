@@ -8,6 +8,7 @@ import { ChevronRight, Banknote, ShieldCheck } from "lucide-react";
 import { useCart } from "@/context/cart-context";
 import { formatCurrency } from "@/lib/format";
 import { generateOrderNumber } from "@/lib/format";
+import { createOrder } from "@/lib/api";
 
 interface FormData {
   name: string;
@@ -62,22 +63,35 @@ export default function CheckoutPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
-    const orderNumber = generateOrderNumber();
-    const orderData = {
-      orderNumber,
-      items,
+    const payload = {
+      name: form.name,
+      phone: form.phone,
+      email: form.email,
+      address: form.address,
+      city: form.city,
+      postalCode: form.postalCode,
+      notes: form.notes,
       subtotal,
       total,
-      shipping: form,
-      date: new Date().toISOString(),
+      items: items.map((i) => ({
+        product: i.product.id,
+        quantity: i.quantity,
+      })),
     };
-    localStorage.setItem("ecommax-last-order", JSON.stringify(orderData));
-    clearCart();
-    router.push("/order/success");
+
+    try {
+      const order = await createOrder(payload);
+      localStorage.setItem("ecommax-last-order", JSON.stringify({ ...order, items }));
+      clearCart();
+      router.push("/order/success");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to create order. Please try again.");
+    }
   };
 
   if (items.length === 0) {

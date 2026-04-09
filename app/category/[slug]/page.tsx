@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { categories } from "@/data/categories";
-import { getProductsByCategory } from "@/data/products";
+import { getCategories, getProducts } from "@/lib/api";
 import { ProductGrid } from "@/components/product/product-grid";
 
-export function generateStaticParams() {
+export async function generateStaticParams() {
+  const categories = await getCategories();
   return categories.map((cat) => ({ slug: cat.slug }));
 }
 
@@ -15,10 +15,11 @@ export default async function CategoryPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  const categories = await getCategories();
   const category = categories.find((c) => c.slug === slug);
   if (!category) notFound();
 
-  const products = getProductsByCategory(slug);
+  const products = await getProducts({ category: slug });
 
   return (
     <div className="min-h-screen bg-background">

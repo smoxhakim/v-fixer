@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
   ShoppingCart,
@@ -14,7 +14,7 @@ import {
   MapPin,
 } from "lucide-react";
 import { useCart } from "@/context/cart-context";
-import { categories } from "@/data/categories";
+import { getCategories } from "@/lib/api";
 
 const trendingKeywords = ["iPhone", "MacBook Pro", "AirPods", "GoPro", "PS5"];
 
@@ -30,6 +30,11 @@ export function Header() {
   const { itemCount } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [categories, setCategories] = useState<{ id: string; name: string; slug: string }[]>([]);
+
+  useEffect(() => {
+    getCategories().then(setCategories).catch(console.error);
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 bg-card border-b border-border">
@@ -100,7 +105,7 @@ export function Header() {
               )}
             </Link>
             <Link
-              href="#"
+              href="/admin/login"
               className="hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-secondary text-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
               aria-label="Account"
             >

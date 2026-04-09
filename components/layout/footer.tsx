@@ -1,7 +1,9 @@
 import Link from "next/link";
-import { categories } from "@/data/categories";
+import { getCategories } from "@/lib/api";
 
-export function Footer() {
+export async function Footer() {
+  const categories = await getCategories();
+  
   return (
     <footer className="bg-foreground text-background">
       <div className="mx-auto max-w-7xl px-4 py-12">
