@@ -3,8 +3,18 @@ __v0_runtime_loader.js
 __v0_devtools.tsx
 __v0_jsx-dev-runtime.ts
 
-# Common ignores
+# Node / Next.js (also under frontend/)
 node_modules/
 .next/
 .env*.local
+
+# Python
+backend/venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
 .DS_Store
+
+# Local / team docs (not versioned)
+docs/

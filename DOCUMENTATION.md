@@ -1,14 +1,21 @@
 # Project Documentation: v-fixer
 
 ## Overview
+
 This document summarizes the development progress and architecture of the **v-fixer** project. The project is a full-stack e-commerce ecosystem built with a Next.js (React) frontend and a Django backend.
+
+## Repository layout
+
+- **`frontend/`** — Next.js app (App Router, Tailwind, UI components).
+- **`backend/`** — Django REST API (`catalog`, `orders`).
 
 ## Architecture
 
 ### Frontend (Next.js App Router)
+
 The frontend is built using Next.js 14+ with the App Router paradigm, styled with Tailwind CSS, and utilizes a comprehensive set of accessible UI components.
 
-- **Routing & Pages (`/app`)**:
+- **Routing & Pages (`frontend/app/`)**:
   - `home`: Landing page with hero section, featured promotions, and category carousels.
   - `admin/*`: Secured area containing `/admin/login` and `/admin/dashboard` for store management.
   - `product/[slug]`: Dynamic product details page.
@@ -16,37 +23,52 @@ The frontend is built using Next.js 14+ with the App Router paradigm, styled wit
   - `cart`: Shopping cart overview.
   - `checkout`: Multi-step checkout process.
   - `order/success`: Order confirmation page.
-  
-- **UI Components (`/components`)**:
-  - `ui/`: Contains a robust library of reusable generic components (built with Radix UI / shadcn-ui patterns) including buttons, dialogs, forms, cards, tables, and toast notifications.
-  - `layout/`: Global layout wrappers, headers, and footers.
-  - `product/`: Specialized components for rendering product cards, grids, and details.
-  - `home/`: specialized components for the landing page (carousels, badges).
 
-- **State Management & Context (`/context`)**:
-  - `cart-context.tsx`: Global state provider for managing user cart items, quantities, and totals.
+- **UI Components (`frontend/components/`)**:
+  - `ui/`: Reusable generic components (Radix / shadcn-style).
+  - `layout/`: Headers, footers, layout shells.
+  - `product/`: Product cards, grids, details.
+  - `home/`: Landing sections (carousels, badges).
 
-- **Utilities & API (`/lib`, `/hooks`)**:
-  - `api.ts`: Helper functions to interface with the Django backend REST API.
-  - `use-toast.ts`, `use-mobile.ts`: Custom React hooks for responsive design and user feedback.
+- **State & data (`frontend/context/`, `frontend/data/`)**:
+  - `cart-context.tsx`: Global cart state.
+
+- **Utilities (`frontend/lib/`, `frontend/hooks/`)**:
+  - `api.ts`: Django REST client.
+  - Hooks for responsive UI and toasts.
 
 ### Backend (Django)
-The backend is a monolithic Django REST application providing headless content to the Next.js frontend.
 
-- **Apps**:
-  - `catalog`: Manages product inventory, categories, and attributes. Includes models, serializers, and generic API views.
-  - `orders`: Manages user orders, cart conversion, and payment tracking.
-- **Database**:
-  - SQLite (`db.sqlite3`) for development iterations, structured with Django ORM migrations.
+The backend is a Django REST application consumed by the Next.js frontend.
 
-## Development Milestones Reached
-1. **Initial Full-Stack Scaffolding**: Setup of the Next.js environment and Django environment as disjoint but intercommunicating services.
-2. **Component Library Integration**: Fully populated UI component library to ensure consistent design language across the application frontend.
-3. **Mock Data Layer**: Created static data (`/data/categories.ts`, `/data/products.ts`) to enable frontend development parallel to backend schema definitions.
-4. **Shopping Cart Functionality**: Implemented React Context-based cart state that persists across page navigations.
-5. **Admin Portal Shell**: Established the routing and layout for the admin side, including login and dashboard foundations.
-6. **Backend Foundation**: Defined initial Django models and REST serializers for "catalog" and "orders".
+- **Apps**: `catalog` (products, categories), `orders`.
+- **Database**: SQLite (`backend/db.sqlite3`) for local development.
 
-## Getting Started
-- **Frontend**: Run `npm run dev` or `yarn dev` from the project root.
-- **Backend**: Navigate to `/backend`, activate your virtual environment, and run `python manage.py runserver`.
+## Development milestones
+
+1. Full-stack scaffolding (Next.js + Django as separate services).
+2. UI component library integrated across the app.
+3. Mock/static data under `frontend/data/` for parallel frontend/backend work.
+4. Cart via React context.
+5. Admin shell (login, dashboard).
+6. Django models, serializers, and REST endpoints for catalog and orders.
+
+## Getting started
+
+Run **two terminals**: Next.js (port 3000 by default) and Django on **port 8001** by default (so port 8000 stays free for other tools).
+
+- **Frontend**: From the repository root, run `npm install` inside `frontend/` once, then either `npm run dev` or `cd frontend && npm run dev`.
+
+- **Backend** (`cd backend`):
+  1. Create a virtual environment (only once per machine): `python3 -m venv venv`
+  2. Activate it: `source venv/bin/activate` (macOS/Linux) or `venv\Scripts\activate` (Windows).
+  3. Install dependencies: `pip install -r requirements.txt`
+  4. Apply migrations: `python manage.py migrate`
+  5. Start the API: `python manage.py runserver 8001` → `http://127.0.0.1:8001`
+
+If `venv/bin/python` was copied from another computer and Django fails to import, remove `backend/venv` and repeat step 1.
+
+The frontend uses `http://localhost:8001/api` by default (`frontend/lib/api.ts`). Override with `NEXT_PUBLIC_API_URL` in `frontend/.env.local` (for example `NEXT_PUBLIC_API_URL=http://localhost:9000/api`).
+
+- **Admin UI (Next):** `/admin/dashboard` (overview), `/admin/dashboard/products`, `/admin/dashboard/categories`, `/admin/dashboard/orders`. Optional JWT from `/admin/login` enables mutating APIs and order list until dedicated auth ships.
+- **Backend API notes for admins:** optional local file `docs/MESSAGE_FOR_BACKEND_TEAM.md` (the `docs/` folder is gitignored).
