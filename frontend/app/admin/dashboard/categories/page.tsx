@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Loader2, Pencil, Plus } from "lucide-react";
+import Link from "next/link";
+import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { AdminAuthBanner } from "@/components/admin/admin-auth-banner";
@@ -9,6 +10,15 @@ import { AdminEmptyState } from "@/components/admin/admin-empty-state";
 import { AdminErrorState } from "@/components/admin/admin-error-state";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,14 +37,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import {
   Table,
   TableBody,
   TableCell,
@@ -46,7 +48,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAdminToken } from "@/hooks/use-admin-token";
 import { adminListCategories } from "@/lib/admin-queries";
 import type { AdminCategory } from "@/lib/admin-types";
-import { createCategory, updateCategoryBySlug } from "@/lib/api";
+import {
+  createCategory,
+  deleteCategoryBySlug,
+  updateCategoryBySlug,
+} from "@/lib/api";
+
+function normalizeSlug(input: string) {
+  return input
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+}
 
 export default function AdminCategoriesPage() {
   const { token, hydrated } = useAdminToken();
@@ -60,17 +74,12 @@ export default function AdminCategoriesPage() {
     name: "",
     slug: "",
     icon: "",
+    imageUrl: "",
     parentId: "" as string | undefined,
   });
 
-  const [edit, setEdit] = useState<AdminCategory | null>(null);
-  const [editForm, setEditForm] = useState({
-    name: "",
-    slug: "",
-    icon: "",
-    parentId: "" as string | undefined,
-  });
-  const [editSaving, setEditSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<AdminCategory | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -85,14 +94,21 @@ export default function AdminCategoriesPage() {
     void load();
   }, [load]);
 
-  const openEdit = (c: AdminCategory) => {
-    setEdit(c);
-    setEditForm({
-      name: c.name,
-      slug: c.slug,
-      icon: c.icon ?? "",
-      parentId: c.parent != null ? String(c.parent) : undefined,
-    });
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget || !token) return;
+    setDeleting(true);
+    try {
+      await deleteCategoryBySlug(deleteTarget.slug, token);
+      toast.success(`Deleted “${deleteTarget.name}”.`);
+      setDeleteTarget(null);
+      await load();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Could not delete category.";
+      toast.error(message);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -103,47 +119,30 @@ export default function AdminCategoriesPage() {
     }
     setSaving(true);
     try {
-      await createCategory(
-        {
-          name: newCat.name.trim(),
-          slug: newCat.slug.trim(),
-          icon: newCat.icon.trim() || null,
-          parent: newCat.parentId ? Number(newCat.parentId) : null,
-        },
-        token,
-      );
-      toast.success("Category created");
-      setNewCat({ name: "", slug: "", icon: "", parentId: undefined });
+      const normalizedSlug = normalizeSlug(newCat.slug.trim());
+      const payload = {
+        name: newCat.name.trim(),
+        slug: normalizedSlug,
+        icon: newCat.icon.trim() || null,
+        imageUrl: newCat.imageUrl.trim() || "",
+        parent: newCat.parentId ? Number(newCat.parentId) : null,
+      };
+      const existing = categories.find((c) => c.slug === normalizedSlug);
+      if (existing) {
+        await updateCategoryBySlug(existing.slug, payload, token);
+        toast.success("Category updated (existing slug).");
+      } else {
+        await createCategory(payload, token);
+        toast.success("Category created");
+      }
+      setNewCat({ name: "", slug: "", icon: "", imageUrl: "", parentId: undefined });
       await load();
-    } catch {
-      toast.error("Could not create category.");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Could not save category.";
+      toast.error(message);
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleEditSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!edit || !token) return;
-    setEditSaving(true);
-    try {
-      await updateCategoryBySlug(
-        edit.slug,
-        {
-          name: editForm.name.trim(),
-          slug: editForm.slug.trim(),
-          icon: editForm.icon.trim() || null,
-          parent: editForm.parentId ? Number(editForm.parentId) : null,
-        },
-        token,
-      );
-      toast.success("Category updated");
-      setEdit(null);
-      await load();
-    } catch {
-      toast.error("Could not update category.");
-    } finally {
-      setEditSaving(false);
     }
   };
 
@@ -164,7 +163,7 @@ export default function AdminCategoriesPage() {
     <div className="space-y-8">
       <AdminPageHeader
         title="Categories"
-        description="The API exposes name, slug, icon, and parent. Description and publish status are UI placeholders until the backend adds fields."
+        description="Name, slug, optional hero image URL, Lucide icon, and parent hierarchy. Use Edit for full-page settings like the product editor."
         actions={
           <Button type="button" variant="outline" size="sm" onClick={() => void load()}>
             Refresh
@@ -238,6 +237,21 @@ export default function AdminCategoriesPage() {
                 />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="nc-image">Image URL (optional)</Label>
+                <Input
+                  id="nc-image"
+                  placeholder="https://… or /media/…"
+                  value={newCat.imageUrl}
+                  onChange={(e) =>
+                    setNewCat((c) => ({ ...c, imageUrl: e.target.value }))
+                  }
+                  className="font-mono text-xs sm:text-sm"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Shown on homepage category tiles when set.
+                </p>
+              </div>
+              <div className="space-y-2">
                 <Label>Parent category</Label>
                 <Select
                   value={newCat.parentId || "__none__"}
@@ -309,6 +323,7 @@ export default function AdminCategoriesPage() {
                   <TableHead>Name</TableHead>
                   <TableHead>Slug</TableHead>
                   <TableHead>Icon</TableHead>
+                  <TableHead>Image</TableHead>
                   <TableHead>Parent</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -320,6 +335,9 @@ export default function AdminCategoriesPage() {
                     <TableCell className="font-medium">{c.name}</TableCell>
                     <TableCell className="text-muted-foreground">{c.slug}</TableCell>
                     <TableCell>{c.icon ?? "—"}</TableCell>
+                    <TableCell className="max-w-[140px] truncate text-muted-foreground text-xs">
+                      {c.imageUrl?.trim() ? c.imageUrl : "—"}
+                    </TableCell>
                     <TableCell className="tabular-nums">
                       {c.parent ?? "—"}
                     </TableCell>
@@ -329,16 +347,51 @@ export default function AdminCategoriesPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        disabled={!token}
-                        onClick={() => openEdit(c)}
-                        aria-label={`Edit ${c.name}`}
-                      >
-                        <Pencil className="size-4" />
-                      </Button>
+                      <div className="inline-flex items-center justify-end gap-0.5">
+                        {token ? (
+                          <>
+                            <Button variant="ghost" size="icon" asChild>
+                              <Link
+                                href={`/admin/dashboard/categories/${encodeURIComponent(c.slug)}/edit`}
+                                aria-label={`Edit ${c.name}`}
+                              >
+                                <Pencil className="size-4" />
+                              </Link>
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                              onClick={() => setDeleteTarget(c)}
+                              aria-label={`Delete ${c.name}`}
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              disabled
+                              aria-label={`Edit ${c.name}`}
+                            >
+                              <Pencil className="size-4" />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              disabled
+                              aria-label={`Delete ${c.name}`}
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -348,90 +401,43 @@ export default function AdminCategoriesPage() {
         </CardContent>
       </Card>
 
-      <Sheet open={!!edit} onOpenChange={(o) => !o && setEdit(null)}>
-        <SheetContent className="flex flex-col overflow-y-auto sm:max-w-md">
-          <SheetHeader>
-            <SheetTitle>Edit category</SheetTitle>
-            <SheetDescription>
-              PATCH <code className="text-xs">/api/categories/:slug/</code>
-            </SheetDescription>
-          </SheetHeader>
-          {edit ? (
-            <form className="flex flex-1 flex-col gap-4 py-4" onSubmit={handleEditSave}>
-              <div className="space-y-2">
-                <Label htmlFor="ec-name">Name</Label>
-                <Input
-                  id="ec-name"
-                  required
-                  value={editForm.name}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, name: e.target.value }))
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="ec-slug">Slug</Label>
-                <Input
-                  id="ec-slug"
-                  required
-                  value={editForm.slug}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, slug: e.target.value }))
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="ec-icon">Icon</Label>
-                <Input
-                  id="ec-icon"
-                  value={editForm.icon}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, icon: e.target.value }))
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Parent</Label>
-                <Select
-                  value={editForm.parentId || "__none__"}
-                  onValueChange={(v) =>
-                    setEditForm((f) => ({
-                      ...f,
-                      parentId: v === "__none__" ? undefined : v,
-                    }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="None" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none__">None</SelectItem>
-                    {categories
-                      .filter((c) => c.id !== edit.id)
-                      .map((c) => (
-                        <SelectItem key={c.id} value={String(c.id)}>
-                          {c.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <SheetFooter className="mt-auto flex-row gap-2 border-t pt-4">
-                <Button type="button" variant="outline" onClick={() => setEdit(null)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={editSaving || !token}>
-                  {editSaving ? (
-                    <Loader2 className="size-4 animate-spin" aria-hidden />
-                  ) : (
-                    "Save"
-                  )}
-                </Button>
-              </SheetFooter>
-            </form>
-          ) : null}
-        </SheetContent>
-      </Sheet>
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete category?</AlertDialogTitle>
+            <AlertDialogDescription className="text-pretty">
+              This will permanently remove{" "}
+              <span className="font-medium text-foreground">
+                {deleteTarget?.name}
+              </span>{" "}
+              (<code className="text-xs">{deleteTarget?.slug}</code>). You cannot
+              delete a category that still has products or subcategories — reassign or
+              remove them first if the server refuses the delete.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={deleting || !token}
+              onClick={() => void handleConfirmDelete()}
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" aria-hidden />
+                  Deleting…
+                </>
+              ) : (
+                "Delete category"
+              )}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

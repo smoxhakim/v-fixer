@@ -2,7 +2,15 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
-import { Loader2, Pencil, Plus } from "lucide-react";
+import Link from "next/link";
+import {
+  Copy,
+  ExternalLink,
+  Loader2,
+  MoreHorizontal,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { AdminAuthBanner } from "@/components/admin/admin-auth-banner";
@@ -28,13 +36,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -51,8 +67,17 @@ import {
 } from "@/lib/admin-queries";
 import { parseMoney } from "@/lib/admin-stats";
 import type { AdminCategory, AdminProduct } from "@/lib/admin-types";
-import { createProduct, updateProductBySlug } from "@/lib/api";
+import { createProduct, deleteProductBySlug } from "@/lib/api";
+import { resolveMediaSrc } from "@/lib/media-url";
 import { formatCurrency } from "@/lib/format";
+
+const NO_CATEGORY_VALUE = "__none__";
+
+function categoryIdFromForm(raw: string): number | null {
+  if (!raw || raw === NO_CATEGORY_VALUE) return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
 
 export default function AdminProductsPage() {
   const { token, hydrated } = useAdminToken();
@@ -76,19 +101,9 @@ export default function AdminProductsPage() {
     imageUrl: "",
   });
 
-  const [editProduct, setEditProduct] = useState<AdminProduct | null>(null);
-  const [editForm, setEditForm] = useState({
-    name: "",
-    slug: "",
-    categoryId: "",
-    price: "",
-    discountPrice: "",
-    stock: "",
-    shortDescription: "",
-    description: "",
-    imageUrl: "",
-  });
-  const [editSaving, setEditSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<AdminProduct | null>(null);
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+  const [duplicatingSlug, setDuplicatingSlug] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -107,34 +122,15 @@ export default function AdminProductsPage() {
     void load();
   }, [load]);
 
-  const openEdit = (p: AdminProduct) => {
-    setEditProduct(p);
-    const cat = categories.find((c) => c.slug === p.categorySlug);
-    setEditForm({
-      name: p.name,
-      slug: p.slug,
-      categoryId: cat ? String(cat.id) : "",
-      price: String(p.price),
-      discountPrice:
-        p.discountPrice !== undefined && p.discountPrice !== null
-          ? String(p.discountPrice)
-          : "",
-      stock: String(p.stock),
-      shortDescription: p.shortDescription ?? "",
-      description: p.description ?? "",
-      imageUrl: p.images?.[0] ?? "",
-    });
-  };
-
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token) {
       toast.error("Add an admin token via /admin/login before mutating.");
       return;
     }
-    const catId = Number(newProduct.categoryId);
-    if (!Number.isFinite(catId)) {
-      toast.error("Pick a category.");
+    const catId = categoryIdFromForm(newProduct.categoryId);
+    if (newProduct.categoryId && newProduct.categoryId !== NO_CATEGORY_VALUE && catId === null) {
+      toast.error("Invalid category.");
       return;
     }
     setSaving(true);
@@ -178,40 +174,63 @@ export default function AdminProductsPage() {
     }
   };
 
-  const handleEditSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editProduct || !token) return;
-    const catId = Number(editForm.categoryId);
-    if (!Number.isFinite(catId)) {
-      toast.error("Pick a category.");
+  const openStorefrontPreview = (slug: string) => {
+    const path = `/product/${encodeURIComponent(slug)}`;
+    if (typeof window !== "undefined") {
+      window.open(path, "_blank", "noopener,noreferrer");
+    }
+  };
+
+  const handleDuplicate = async (p: AdminProduct) => {
+    if (!token) {
+      toast.error("Add an admin token via /admin/login before mutating.");
       return;
     }
-    setEditSaving(true);
+    const cat = p.categorySlug
+      ? categories.find((c) => c.slug === p.categorySlug)
+      : undefined;
+    const newSlug = `${p.slug}-copy-${Date.now().toString(36)}`;
+    setDuplicatingSlug(p.slug);
     try {
-      await updateProductBySlug(
-        editProduct.slug,
+      await createProduct(
         {
-          name: editForm.name.trim(),
-          slug: editForm.slug.trim(),
-          category: catId,
-          price: Number(editForm.price),
-          discountPrice: editForm.discountPrice
-            ? Number(editForm.discountPrice)
-            : null,
-          stock: Number(editForm.stock),
-          shortDescription: editForm.shortDescription.trim() || null,
-          description: editForm.description.trim() || null,
-          images: editForm.imageUrl.trim() ? [editForm.imageUrl.trim()] : [],
+          name: `${p.name} (copy)`,
+          slug: newSlug,
+          category: cat?.id ?? null,
+          price: Number(p.price),
+          discountPrice:
+            p.discountPrice !== undefined && p.discountPrice !== null
+              ? Number(p.discountPrice)
+              : null,
+          stock: Number(p.stock),
+          shortDescription: p.shortDescription ?? null,
+          description: p.description ?? null,
+          images: Array.isArray(p.images) ? [...p.images] : [],
+          rating: Number(p.rating ?? 0),
         },
         token,
       );
-      toast.success("Product updated");
-      setEditProduct(null);
+      toast.success("Duplicate created");
       await load();
     } catch {
-      toast.error("Could not update product.");
+      toast.error("Could not duplicate product.");
     } finally {
-      setEditSaving(false);
+      setDuplicatingSlug(null);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget || !token) return;
+    setDeleteSubmitting(true);
+    try {
+      await deleteProductBySlug(deleteTarget.slug, token);
+      toast.success("Product deleted");
+      setDeleteTarget(null);
+      await load();
+    } catch {
+      toast.error("Could not delete product.");
+    } finally {
+      setDeleteSubmitting(false);
     }
   };
 
@@ -310,12 +329,12 @@ export default function AdminProductsPage() {
                   onValueChange={(v) =>
                     setNewProduct((p) => ({ ...p, categoryId: v }))
                   }
-                  required
                 >
                   <SelectTrigger className="w-full max-w-md">
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue placeholder="Category (optional)" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value={NO_CATEGORY_VALUE}>No category</SelectItem>
                     {categories.map((c) => (
                       <SelectItem key={c.id} value={String(c.id)}>
                         {c.name}
@@ -425,7 +444,10 @@ export default function AdminProductsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Inventory</CardTitle>
-          <CardDescription>All products returned by the public list endpoint.</CardDescription>
+          <CardDescription>
+            All products from the catalog API. Use the row menu to open the full-page editor, preview on
+            the storefront, duplicate, or delete.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {products.length === 0 ? (
@@ -444,12 +466,12 @@ export default function AdminProductsPage() {
                   <TableHead className="text-right">Price</TableHead>
                   <TableHead className="text-right">Stock</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="w-24 text-right">Actions</TableHead>
+                  <TableHead className="min-w-[148px] text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {products.map((p) => {
-                  const thumb = p.images?.[0];
+                  const thumb = p.images?.[0] ? resolveMediaSrc(p.images[0]) : "";
                   return (
                     <TableRow key={p.id}>
                       <TableCell>
@@ -479,16 +501,49 @@ export default function AdminProductsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          disabled={!token}
-                          onClick={() => openEdit(p)}
-                          aria-label={`Edit ${p.name}`}
-                        >
-                          <Pencil className="size-4" />
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              disabled={!token}
+                              aria-label={`Actions for ${p.name}`}
+                            >
+                              <MoreHorizontal className="size-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem asChild>
+                              <Link
+                                href={`/admin/dashboard/products/${encodeURIComponent(p.slug)}/edit`}
+                              >
+                                Edit
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => openStorefrontPreview(p.slug)}
+                            >
+                              <ExternalLink className="size-4" />
+                              Preview on site
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              disabled={duplicatingSlug === p.slug}
+                              onClick={() => void handleDuplicate(p)}
+                            >
+                              <Copy className="size-4" />
+                              Duplicate
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              variant="destructive"
+                              onClick={() => setDeleteTarget(p)}
+                            >
+                              <Trash2 className="size-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   );
@@ -499,151 +554,36 @@ export default function AdminProductsPage() {
         </CardContent>
       </Card>
 
-      <Sheet open={!!editProduct} onOpenChange={(o) => !o && setEditProduct(null)}>
-        <SheetContent className="flex flex-col gap-0 overflow-y-auto sm:max-w-lg">
-          <SheetHeader>
-            <SheetTitle>Edit product</SheetTitle>
-            <SheetDescription>
-              Updates are sent as <code className="text-xs">PATCH /api/products/:slug/</code>.
-            </SheetDescription>
-          </SheetHeader>
-          {editProduct ? (
-            <form className="flex flex-1 flex-col gap-4 py-4" onSubmit={handleEditSave}>
-              <div className="space-y-2">
-                <Label htmlFor="ep-name">Name</Label>
-                <Input
-                  id="ep-name"
-                  required
-                  value={editForm.name}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, name: e.target.value }))
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="ep-slug">Slug</Label>
-                <Input
-                  id="ep-slug"
-                  required
-                  value={editForm.slug}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, slug: e.target.value }))
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Category</Label>
-                <Select
-                  value={editForm.categoryId || undefined}
-                  onValueChange={(v) =>
-                    setEditForm((f) => ({ ...f, categoryId: v }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((c) => (
-                      <SelectItem key={c.id} value={String(c.id)}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="ep-price">Price</Label>
-                  <Input
-                    id="ep-price"
-                    type="number"
-                    step="0.01"
-                    required
-                    value={editForm.price}
-                    onChange={(e) =>
-                      setEditForm((f) => ({ ...f, price: e.target.value }))
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="ep-dp">Discount</Label>
-                  <Input
-                    id="ep-dp"
-                    type="number"
-                    step="0.01"
-                    value={editForm.discountPrice}
-                    onChange={(e) =>
-                      setEditForm((f) => ({ ...f, discountPrice: e.target.value }))
-                    }
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="ep-stock">Stock</Label>
-                <Input
-                  id="ep-stock"
-                  type="number"
-                  required
-                  value={editForm.stock}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, stock: e.target.value }))
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="ep-img">Primary image URL</Label>
-                <Input
-                  id="ep-img"
-                  value={editForm.imageUrl}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, imageUrl: e.target.value }))
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="ep-short">Short description</Label>
-                <Input
-                  id="ep-short"
-                  value={editForm.shortDescription}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, shortDescription: e.target.value }))
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="ep-desc">Description</Label>
-                <Textarea
-                  id="ep-desc"
-                  rows={3}
-                  value={editForm.description}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, description: e.target.value }))
-                  }
-                />
-              </div>
-              <SheetFooter className="mt-auto flex-row gap-2 border-t pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setEditProduct(null)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={editSaving || !token}>
-                  {editSaving ? (
-                    <>
-                      <Loader2 className="size-4 animate-spin" aria-hidden />
-                      Saving…
-                    </>
-                  ) : (
-                    "Save changes"
-                  )}
-                </Button>
-              </SheetFooter>
-            </form>
-          ) : null}
-        </SheetContent>
-      </Sheet>
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete product?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget
+                ? `This will permanently remove “${deleteTarget.name}” (${deleteTarget.slug}). This cannot be undone.`
+                : null}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteSubmitting}>Cancel</AlertDialogCancel>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={deleteSubmitting || !token}
+              onClick={() => void handleDeleteConfirm()}
+            >
+              {deleteSubmitting ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" aria-hidden />
+                  Deleting…
+                </>
+              ) : (
+                "Delete"
+              )}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -1,21 +1,23 @@
 import { HeroSection } from "@/components/home/hero-section";
-import { CategoryCarousel } from "@/components/home/category-carousel";
+import { BestSellingSection } from "@/components/home/best-selling-section";
+import { CategoryShowcaseSlider } from "@/components/home/category-showcase-slider";
 import { TrustBadges } from "@/components/home/trust-badges";
-import { FeaturedPromos } from "@/components/home/featured-promos";
 import { ProductGrid } from "@/components/product/product-grid";
-import { getProducts } from "@/lib/api";
+import { getHomeBestSelling, getHomeHero, getProducts } from "@/lib/api";
 
 export default async function Home() {
-  const trending = await getProducts({ trending: true });
-  const featured = await getProducts({ featured: true });
+  const [bestSelling, featured, hero] = await Promise.all([
+    getHomeBestSelling(),
+    getProducts({ featured: true }),
+    getHomeHero(),
+  ]);
 
   return (
     <>
-      <HeroSection />
-      <CategoryCarousel />
+      <HeroSection mainSlides={hero?.mainSlides} sidePromos={hero?.sidePromos} />
       <TrustBadges />
-      <FeaturedPromos />
-      <ProductGrid title="Top Smartphone Trends" products={trending} />
+      <CategoryShowcaseSlider />
+      <BestSellingSection items={bestSelling} />
       <div className="bg-secondary">
         <ProductGrid title="Featured Products" products={featured} />
       </div>

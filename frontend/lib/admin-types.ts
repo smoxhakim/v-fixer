@@ -5,6 +5,7 @@ export interface AdminCategory {
   name: string;
   slug: string;
   icon?: string | null;
+  imageUrl?: string | null;
   parent?: number | null;
 }
 
@@ -15,6 +16,7 @@ export interface AdminProduct {
   categorySlug?: string;
   price: string | number;
   discountPrice?: string | number | null;
+  costPrice?: string | number | null;
   rating?: string | number;
   images?: string[];
   shortDescription?: string | null;

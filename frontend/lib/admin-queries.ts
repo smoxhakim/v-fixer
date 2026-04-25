@@ -6,10 +6,14 @@ import type {
   AdminProduct,
 } from "@/lib/admin-types";
 
-export async function adminListProducts(): Promise<
-  AdminFetchResult<AdminProduct[]>
-> {
-  const res = await apiFetch(`${API_URL}/products/`);
+export async function adminListProducts(params?: {
+  categorySlug?: string;
+}): Promise<AdminFetchResult<AdminProduct[]>> {
+  const qs =
+    params?.categorySlug != null && params.categorySlug !== ""
+      ? `?categorySlug=${encodeURIComponent(params.categorySlug)}`
+      : "";
+  const res = await apiFetch(`${API_URL}/products/${qs}`);
   if (!res) return { ok: false, error: "Network error — is the API running?" };
   if (!res.ok)
     return { ok: false, error: `Products request failed (${res.status}).` };

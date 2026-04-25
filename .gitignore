@@ -15,6 +15,3 @@ __pycache__/
 *$py.class
 
 .DS_Store
-
-# Local / team docs (not versioned)
-docs/

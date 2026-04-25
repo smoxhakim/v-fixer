@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Minus, Plus, Trash2, ChevronRight, ShoppingCart } from "lucide-react";
 import { useCart } from "@/context/cart-context";
 import { formatCurrency } from "@/lib/format";
+import { resolveMediaSrc } from "@/lib/media-url";
 
 export default function CartPage() {
   const { items, removeItem, updateQty, subtotal, total } = useCart();
@@ -68,12 +69,15 @@ export default function CartPage() {
                     {/* Product */}
                     <div className="md:col-span-6 flex items-center gap-4">
                       <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-secondary">
+                        {item.product.images?.[0] ? (
                         <Image
-                          src={item.product.images[0]}
+                          src={resolveMediaSrc(item.product.images[0])}
                           alt={item.product.name}
                           fill
                           className="object-cover"
+                          sizes="80px"
                         />
+                        ) : null}
                       </div>
                       <div>
                         <Link
@@ -83,7 +87,9 @@ export default function CartPage() {
                           {item.product.name}
                         </Link>
                         <p className="mt-0.5 text-xs text-muted-foreground capitalize">
-                          {item.product.categorySlug.replace("-", " ")}
+                          {item.product.categorySlug
+                            ? item.product.categorySlug.replace("-", " ")
+                            : "Uncategorized"}
                         </p>
                       </div>
                     </div>

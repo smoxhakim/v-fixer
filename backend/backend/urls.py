@@ -16,9 +16,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.routers import DefaultRouter
-from catalog.views import CategoryViewSet, ProductViewSet
+from catalog.views import (
+    CategoryViewSet,
+    HomeBestSellingView,
+    HomeHeroView,
+    ProductViewSet,
+)
 from orders.views import OrderViewSet
 
 router = DefaultRouter()
@@ -28,7 +35,16 @@ router.register(r'orders', OrderViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/home-hero/', HomeHeroView.as_view(), name='home-hero'),
+    path(
+        'api/home-best-selling/',
+        HomeBestSellingView.as_view(),
+        name='home-best-selling',
+    ),
     path('api/', include(router.urls)),
     path('api/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -9,6 +9,7 @@ import { useCart } from "@/context/cart-context";
 import { formatCurrency } from "@/lib/format";
 import { generateOrderNumber } from "@/lib/format";
 import { createOrder } from "@/lib/api";
+import { resolveMediaSrc } from "@/lib/media-url";
 import { writeLastOrderJson } from "@/lib/storage-keys";
 
 interface FormData {
@@ -344,12 +345,15 @@ export default function CheckoutPage() {
                   {items.map((item) => (
                     <div key={item.product.id} className="flex items-center gap-3">
                       <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-secondary">
+                        {item.product.images?.[0] ? (
                         <Image
-                          src={item.product.images[0]}
+                          src={resolveMediaSrc(item.product.images[0])}
                           alt={item.product.name}
                           fill
                           className="object-cover"
+                          sizes="48px"
                         />
+                        ) : null}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium text-foreground line-clamp-1">

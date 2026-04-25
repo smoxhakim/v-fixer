@@ -6,6 +6,7 @@ import { Star, Minus, Plus, ShoppingCart, ChevronRight, Truck, ShieldCheck, Refr
 import { formatCurrency } from "@/lib/format";
 import { useCart } from "@/context/cart-context";
 import type { Product } from "@/data/products";
+import { resolveMediaSrc } from "@/lib/media-url";
 import Link from "next/link";
 
 export function ProductDetails({ product }: { product: Product }) {
@@ -13,6 +14,8 @@ export function ProductDetails({ product }: { product: Product }) {
   const [qty, setQty] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [added, setAdded] = useState(false);
+  const images = product.images ?? [];
+  const mainSrc = images[selectedImage] ? resolveMediaSrc(images[selectedImage]) : "";
 
   const handleAdd = () => {
     addItem(product, qty);
@@ -29,12 +32,16 @@ export function ProductDetails({ product }: { product: Product }) {
             Home
           </Link>
           <ChevronRight className="h-3.5 w-3.5" />
-          <Link
-            href={`/category/${product.categorySlug}`}
-            className="hover:text-primary transition-colors capitalize"
-          >
-            {product.categorySlug.replace("-", " ")}
-          </Link>
+          {product.categorySlug ? (
+            <Link
+              href={`/category/${product.categorySlug}`}
+              className="hover:text-primary transition-colors capitalize"
+            >
+              {product.categorySlug.replace("-", " ")}
+            </Link>
+          ) : (
+            <span className="capitalize text-muted-foreground">Uncategorized</span>
+          )}
           <ChevronRight className="h-3.5 w-3.5" />
           <span className="text-foreground font-medium line-clamp-1">
             {product.name}
@@ -47,24 +54,32 @@ export function ProductDetails({ product }: { product: Product }) {
           {/* Gallery */}
           <div>
             <div className="relative aspect-square overflow-hidden rounded-xl bg-secondary">
+              {mainSrc ? (
               <Image
-                src={product.images[selectedImage]}
+                src={mainSrc}
                 alt={product.name}
                 fill
                 className="object-cover"
                 priority
+                sizes="(max-width: 1024px) 100vw, 50vw"
               />
+              ) : (
+                <div className="flex h-full min-h-[240px] items-center justify-center text-sm text-muted-foreground">
+                  No image
+                </div>
+              )}
               {product.discountPrice && (
                 <span className="absolute top-3 left-3 rounded bg-destructive px-3 py-1 text-xs font-bold text-primary-foreground">
                   -{Math.round(((product.price - product.discountPrice) / product.price) * 100)}% OFF
                 </span>
               )}
             </div>
-            {product.images.length > 1 && (
+            {images.length > 1 && (
               <div className="mt-3 flex gap-3">
-                {product.images.map((img, i) => (
+                {images.map((img, i) => (
                   <button
                     key={i}
+                    type="button"
                     onClick={() => setSelectedImage(i)}
                     className={`relative h-20 w-20 overflow-hidden rounded-lg border-2 transition-colors ${
                       i === selectedImage
@@ -73,10 +88,11 @@ export function ProductDetails({ product }: { product: Product }) {
                     }`}
                   >
                     <Image
-                      src={img}
+                      src={resolveMediaSrc(img)}
                       alt={`${product.name} ${i + 1}`}
                       fill
                       className="object-cover"
+                      sizes="80px"
                     />
                   </button>
                 ))}
@@ -87,7 +103,9 @@ export function ProductDetails({ product }: { product: Product }) {
           {/* Info */}
           <div>
             <span className="text-xs uppercase tracking-wider text-muted-foreground">
-              {product.categorySlug.replace("-", " ")}
+              {product.categorySlug
+                ? product.categorySlug.replace("-", " ")
+                : "Uncategorized"}
             </span>
             <h1 className="mt-2 text-2xl font-bold text-foreground lg:text-3xl text-balance">
               {product.name}
@@ -99,7 +117,7 @@ export function ProductDetails({ product }: { product: Product }) {
                 <Star
                   key={i}
                   className={`h-4 w-4 ${
-                    i < Math.floor(product.rating)
+                    i < Math.floor(Number(product.rating) || 0)
                       ? "fill-amber-400 text-amber-400"
                       : "fill-muted text-muted"
                   }`}
@@ -171,7 +189,7 @@ export function ProductDetails({ product }: { product: Product }) {
             </div>
 
             {/* Specs */}
-            {product.specs.length > 0 && (
+            {Array.isArray(product.specs) && product.specs.length > 0 && (
               <div className="mt-8">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-foreground mb-3">
                   Specifications

@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { CheckCircle, Truck, Banknote } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
+import { resolveMediaSrc } from "@/lib/media-url";
 import { readLastOrderJson } from "@/lib/storage-keys";
 
 interface OrderData {
@@ -108,12 +109,15 @@ export default function OrderSuccessPage() {
             {order.items.map((item) => (
               <div key={item.product.id} className="flex items-center gap-3">
                 <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-secondary">
+                  {item.product.images?.[0] ? (
                   <Image
-                    src={item.product.images[0]}
+                    src={resolveMediaSrc(item.product.images[0])}
                     alt={item.product.name}
                     fill
                     className="object-cover"
+                    sizes="56px"
                   />
+                  ) : null}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground line-clamp-1">

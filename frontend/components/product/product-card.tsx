@@ -6,9 +6,11 @@ import { Star, ShoppingCart } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { useCart } from "@/context/cart-context";
 import type { Product } from "@/data/products";
+import { resolveMediaSrc } from "@/lib/media-url";
 
 export function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
+  const thumb = product.images?.[0] ? resolveMediaSrc(product.images[0]) : "";
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition-shadow">
@@ -16,12 +18,19 @@ export function ProductCard({ product }: { product: Product }) {
         href={`/product/${product.slug}`}
         className="relative aspect-square overflow-hidden bg-secondary"
       >
+        {thumb ? (
         <Image
-          src={product.images[0]}
+          src={thumb}
           alt={product.name}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105"
+          sizes="(max-width: 768px) 50vw, 25vw"
         />
+        ) : (
+          <div className="flex h-full min-h-[160px] items-center justify-center bg-muted text-xs text-muted-foreground">
+            No image
+          </div>
+        )}
         {product.discountPrice && (
           <span className="absolute top-2 left-2 rounded bg-destructive px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
             -{Math.round(((product.price - product.discountPrice) / product.price) * 100)}%
@@ -30,7 +39,9 @@ export function ProductCard({ product }: { product: Product }) {
       </Link>
       <div className="flex flex-1 flex-col p-3">
         <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-          {product.categorySlug.replace("-", " ")}
+          {product.categorySlug
+            ? product.categorySlug.replace("-", " ")
+            : "Uncategorized"}
         </span>
         <Link
           href={`/product/${product.slug}`}

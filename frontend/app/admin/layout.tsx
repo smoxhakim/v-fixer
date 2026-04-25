@@ -25,6 +25,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               Products
             </Link>
             <Link
+              href="/admin/dashboard/home-hero"
+              className="text-muted-foreground transition-colors hover:text-primary"
+            >
+              Home hero
+            </Link>
+            <Link
               href="/admin/dashboard/categories"
               className="text-muted-foreground transition-colors hover:text-primary"
             >
@@ -35,6 +41,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               className="text-muted-foreground transition-colors hover:text-primary"
             >
               Orders
+            </Link>
+            <Link
+              href="/admin/dashboard/import"
+              className="text-muted-foreground transition-colors hover:text-primary"
+            >
+              Import
             </Link>
             <Link
               href="/admin/login"

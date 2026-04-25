@@ -7,6 +7,9 @@ import {
   Package,
   FolderTree,
   ShoppingCart,
+  FileUp,
+  LayoutTemplate,
+  TrendingUp,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -15,11 +18,22 @@ const links = [
   { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/admin/dashboard/products", label: "Products", icon: Package },
   {
+    href: "/admin/dashboard/home-hero",
+    label: "Home hero",
+    icon: LayoutTemplate,
+  },
+  {
+    href: "/admin/dashboard/best-selling",
+    label: "Best selling",
+    icon: TrendingUp,
+  },
+  {
     href: "/admin/dashboard/categories",
     label: "Categories",
     icon: FolderTree,
   },
   { href: "/admin/dashboard/orders", label: "Orders", icon: ShoppingCart },
+  { href: "/admin/dashboard/import", label: "Import", icon: FileUp },
 ] as const;
 
 export function AdminSidebar() {

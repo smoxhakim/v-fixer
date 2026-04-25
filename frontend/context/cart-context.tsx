@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import type { Product } from "@/data/products";
+import { normalizeProductImages } from "@/lib/media-url";
 import { readCartJson, writeCartJson } from "@/lib/storage-keys";
 
 export interface CartItem {
@@ -29,20 +30,19 @@ type CartAction =
 function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
     case "ADD_ITEM": {
-      const existing = state.items.find(
-        (i) => i.product.id === action.product.id
-      );
+      const product = normalizeProductImages(action.product);
+      const existing = state.items.find((i) => i.product.id === product.id);
       if (existing) {
         return {
           items: state.items.map((i) =>
-            i.product.id === action.product.id
+            i.product.id === product.id
               ? { ...i, quantity: i.quantity + action.quantity }
               : i
           ),
         };
       }
       return {
-        items: [...state.items, { product: action.product, quantity: action.quantity }],
+        items: [...state.items, { product, quantity: action.quantity }],
       };
     }
     case "REMOVE_ITEM":
@@ -60,7 +60,12 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     case "CLEAR":
       return { items: [] };
     case "LOAD":
-      return { items: action.items };
+      return {
+        items: action.items.map((i) => ({
+          ...i,
+          product: normalizeProductImages(i.product),
+        })),
+      };
     default:
       return state;
   }

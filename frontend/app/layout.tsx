@@ -4,6 +4,8 @@ import { Analytics } from "@vercel/analytics/next";
 import { CartProvider } from "@/context/cart-context";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -22,13 +24,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} font-sans antialiased`}>
-        <CartProvider>
-          <div className="flex min-h-screen flex-col">
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
-        </CartProvider>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+          <CartProvider>
+            <div className="flex min-h-screen flex-col">
+              <Header />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
+          </CartProvider>
+          <Toaster position="top-right" richColors closeButton />
+        </ThemeProvider>
         <Analytics />
       </body>
     </html>
