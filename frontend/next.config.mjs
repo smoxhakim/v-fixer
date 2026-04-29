@@ -1,3 +1,7 @@
+import createNextIntlPlugin from "next-intl/plugin";
+
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
+
 /** @type {import('next').NextConfig} */
 function buildMediaRemotePatterns() {
   const raw = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api";
@@ -37,4 +41,5 @@ const nextConfig = {
   },
 }
 
-export default nextConfig
+export default withNextIntl(nextConfig);
+

@@ -1,40 +1,37 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next";
-import { CartProvider } from "@/context/cart-context";
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
-import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "@/components/ui/sonner";
+import { Inter, Noto_Sans_Arabic } from "next/font/google";
+import { getLocale } from "next-intl/server";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const notoArabic = Noto_Sans_Arabic({
+  subsets: ["arabic"],
+  variable: "--font-noto-arabic",
+});
 
 export const metadata: Metadata = {
-  title: "V-fixer — Premium Electronics Store",
-  description:
-    "Shop the latest smartphones, laptops, cameras, gaming consoles and more at V-fixer. Free delivery, secure payment, and 24/7 support.",
+  title: "V-fixer",
+  description: "V-fixer",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const dir = locale === "ar" ? "rtl" : "ltr";
+  const fontClass =
+    locale === "ar"
+      ? "font-[family-name:var(--font-noto-arabic),sans-serif]"
+      : "font-sans";
+
   return (
-    <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-          <CartProvider>
-            <div className="flex min-h-screen flex-col">
-              <Header />
-              <main className="flex-1">{children}</main>
-              <Footer />
-            </div>
-          </CartProvider>
-          <Toaster position="top-right" richColors closeButton />
-        </ThemeProvider>
-        <Analytics />
+    <html lang={locale} dir={dir} suppressHydrationWarning>
+      <body
+        className={`${inter.variable} ${notoArabic.variable} ${fontClass} antialiased`}
+      >
+        {children}
       </body>
     </html>
   );

@@ -1,47 +1,44 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { Star, ShoppingCart } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { formatCurrency } from "@/lib/format";
 import { useCart } from "@/context/cart-context";
 import type { Product } from "@/data/products";
 import { resolveMediaSrc } from "@/lib/media-url";
 
 export function ProductCard({ product }: { product: Product }) {
+  const t = useTranslations("ProductCard");
   const { addItem } = useCart();
   const thumb = product.images?.[0] ? resolveMediaSrc(product.images[0]) : "";
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition-shadow">
-      <Link
-        href={`/product/${product.slug}`}
-        className="relative aspect-square overflow-hidden bg-secondary"
-      >
+      <Link href={`/product/${product.slug}`} className="relative aspect-square overflow-hidden bg-secondary">
         {thumb ? (
-        <Image
-          src={thumb}
-          alt={product.name}
-          fill
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-          sizes="(max-width: 768px) 50vw, 25vw"
-        />
+          <Image
+            src={thumb}
+            alt={product.name}
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            sizes="(max-width: 768px) 50vw, 25vw"
+          />
         ) : (
           <div className="flex h-full min-h-[160px] items-center justify-center bg-muted text-xs text-muted-foreground">
-            No image
+            {t("noImage")}
           </div>
         )}
         {product.discountPrice && (
-          <span className="absolute top-2 left-2 rounded bg-destructive px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
+          <span className="absolute top-2 start-2 rounded bg-destructive px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
             -{Math.round(((product.price - product.discountPrice) / product.price) * 100)}%
           </span>
         )}
       </Link>
       <div className="flex flex-1 flex-col p-3">
         <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-          {product.categorySlug
-            ? product.categorySlug.replace("-", " ")
-            : "Uncategorized"}
+          {product.categorySlug ? product.categorySlug.replace("-", " ") : t("uncategorized")}
         </span>
         <Link
           href={`/product/${product.slug}`}
@@ -60,9 +57,7 @@ export function ProductCard({ product }: { product: Product }) {
               }`}
             />
           ))}
-          <span className="ml-1 text-[10px] text-muted-foreground">
-            ({product.rating})
-          </span>
+          <span className="ms-1 text-[10px] text-muted-foreground">({product.rating})</span>
         </div>
         <div className="mt-auto pt-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -76,9 +71,10 @@ export function ProductCard({ product }: { product: Product }) {
             )}
           </div>
           <button
+            type="button"
             onClick={() => addItem(product)}
             className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-            aria-label={`Add ${product.name} to cart`}
+            aria-label={t("addToCart", { name: product.name })}
           >
             <ShoppingCart className="h-4 w-4" />
           </button>

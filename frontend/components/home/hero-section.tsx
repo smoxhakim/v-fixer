@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import type { HomeHeroSlidePayload } from "@/lib/home-hero";
@@ -55,7 +56,7 @@ const DEFAULT_SIDE: HomeHeroSlidePayload[] = [
     imageUrl:
       "https://images.unsplash.com/photo-1590658268037-6bf12f032f55?w=500&h=300&fit=crop",
     linkHref: "/category/audio",
-    gradientClass: "from-[#e83e8c] to-[#6f42c1]",
+    gradientClass: "from-emerald-100 to-lime-50",
   },
   {
     tag: "NEW ARRIVALS",
@@ -64,9 +65,15 @@ const DEFAULT_SIDE: HomeHeroSlidePayload[] = [
     imageUrl:
       "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&h=300&fit=crop",
     linkHref: "/category/audio",
-    gradientClass: "from-[#1a1a2e] to-[#4a148c]",
+    gradientClass: "from-amber-100 to-yellow-50",
   },
 ];
+
+/** Right-column promos: fixed light green / light yellow (slot index), independent of CMS gradient. */
+const SIDE_PROMO_GRADIENTS = [
+  "from-emerald-100 via-green-50 to-teal-50",
+  "from-amber-100 via-yellow-50 to-amber-50",
+] as const;
 
 function toVisual(s: HomeHeroSlidePayload): VisualSlide {
   const img = s.imageUrl.trim();
@@ -87,6 +94,7 @@ export function HeroSection({
   mainSlides?: HomeHeroSlidePayload[] | null;
   sidePromos?: HomeHeroSlidePayload[] | null;
 }) {
+  const t = useTranslations("Hero");
   const slides = useMemo(() => {
     const src = mainProp?.length ? mainProp : DEFAULT_MAIN;
     return src.map(toVisual);
@@ -156,7 +164,7 @@ export function HeroSection({
                     <p className="mt-2 text-sm text-primary-foreground/70">{slide.description}</p>
                   ) : null}
                   <span className="mt-4 inline-flex w-fit rounded-lg bg-card px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-primary hover:text-primary-foreground">
-                    SHOP NOW
+                    {t("shopNow")}
                   </span>
                 </div>
               </Link>
@@ -171,7 +179,7 @@ export function HeroSection({
                 prev();
               }}
               className="flex h-8 w-8 items-center justify-center rounded-full border border-primary-foreground/30 text-primary-foreground/70 transition-colors hover:bg-primary-foreground/10"
-              aria-label="Previous slide"
+              aria-label={t("prevSlide")}
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -186,7 +194,7 @@ export function HeroSection({
                 className={`h-2.5 w-2.5 rounded-full transition-colors ${
                   i === current ? "bg-primary" : "bg-primary-foreground/30"
                 }`}
-                aria-label={`Go to slide ${i + 1}`}
+                aria-label={t("goToSlide", { n: i + 1 })}
               />
             ))}
             <button
@@ -196,7 +204,7 @@ export function HeroSection({
                 next();
               }}
               className="flex h-8 w-8 items-center justify-center rounded-full border border-primary-foreground/30 text-primary-foreground/70 transition-colors hover:bg-primary-foreground/10"
-              aria-label="Next slide"
+              aria-label={t("nextSlide")}
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -210,23 +218,34 @@ export function HeroSection({
               href={promo.href}
               className="relative flex-1 overflow-hidden rounded-xl"
             >
-              <div className={`absolute inset-0 bg-gradient-to-r ${promo.bg}`} />
               {promo.image ? (
-                <Image
-                  src={promo.image}
-                  alt={promo.title}
-                  fill
-                  className="object-cover opacity-30 mix-blend-luminosity"
-                  sizes="(max-width: 1024px) 100vw, 33vw"
+                <>
+                  <Image
+                    src={promo.image}
+                    alt={promo.title}
+                    fill
+                    className="z-0 object-cover"
+                    sizes="(max-width: 1024px) 100vw, 33vw"
+                  />
+                  <div
+                    aria-hidden
+                    className={`pointer-events-none absolute inset-0 z-[1] bg-gradient-to-br ${SIDE_PROMO_GRADIENTS[i % SIDE_PROMO_GRADIENTS.length]} opacity-[0.42]`}
+                  />
+                </>
+              ) : (
+                <div
+                  className={`absolute inset-0 z-0 bg-gradient-to-br ${SIDE_PROMO_GRADIENTS[i % SIDE_PROMO_GRADIENTS.length]}`}
                 />
-              ) : null}
+              )}
               <div className="relative z-10 flex h-full min-h-[140px] flex-col justify-center p-5">
-                <span className="inline-flex w-fit rounded bg-accent px-2 py-0.5 text-[10px] font-bold uppercase text-accent-foreground">
+                <span className="inline-flex w-fit rounded bg-card/90 px-2 py-0.5 text-[10px] font-bold uppercase text-foreground shadow-sm">
                   {promo.tag}
                 </span>
-                <h3 className="mt-2 text-lg font-bold text-primary-foreground">{promo.title}</h3>
-                <span className="mt-2 flex items-center gap-1 text-xs font-medium text-primary-foreground/80 hover:text-primary-foreground">
-                  Shop Now →
+                <h3 className="mt-2 text-lg font-bold text-foreground drop-shadow-sm">
+                  {promo.title}
+                </h3>
+                <span className="mt-2 flex items-center gap-1 text-xs font-medium text-foreground/80 hover:text-foreground">
+                  {t("shopNowSide")}
                 </span>
               </div>
             </Link>

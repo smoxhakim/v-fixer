@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -68,6 +69,14 @@ REST_FRAMEWORK = {
         'djangorestframework_camel_case.parser.CamelCaseMultiPartParser',
         'djangorestframework_camel_case.parser.CamelCaseFormParser',
     ),
+}
+
+# Admin UI stores the access JWT in localStorage (no refresh flow yet).
+# Default SimpleJWT access lifetime is 5 minutes — extend to 30 days minimum usable session.
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=30),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=90),
+    "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
 CORS_ALLOW_ALL_ORIGINS = True

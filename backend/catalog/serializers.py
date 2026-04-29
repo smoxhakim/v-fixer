@@ -62,7 +62,12 @@ class HomeHeroMainSlideInputSerializer(serializers.Serializer):
     tag = serializers.CharField(allow_blank=True, max_length=120, required=False, default="")
     title = serializers.CharField(max_length=200)
     description = serializers.CharField(allow_blank=True, max_length=500, required=False, default="")
-    image_url = serializers.CharField(max_length=2000)
+    image_url = serializers.CharField(
+        max_length=2000,
+        allow_blank=True,
+        required=False,
+        default="",
+    )
     link_href = serializers.CharField(max_length=500)
     gradient_class = serializers.CharField(allow_blank=True, max_length=200, required=False, default="")
 

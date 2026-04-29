@@ -88,11 +88,16 @@ async function extractApiErrorMessage(
   }
 
   if (
+    payload?.code === "token_not_valid" &&
+    (res.status === 401 || res.status === 403)
+  ) {
+    return "Admin session expired. Please sign in again at /admin/login.";
+  }
+  if (
     res.status === 401 &&
-    (payload?.code === "token_not_valid" ||
-      String(payload?.detail ?? "")
-        .toLowerCase()
-        .includes("token"))
+    String(payload?.detail ?? "")
+      .toLowerCase()
+      .includes("token")
   ) {
     return "Admin session expired. Please sign in again at /admin/login.";
   }
@@ -116,6 +121,11 @@ async function extractApiErrorMessage(
   }
   if (typeof text === "string" && text.trim()) return text.slice(0, 240);
   return `${fallback} (${res.status})`;
+}
+
+/** True when `updateProductBySlug` (etc.) failed because the JWT access token expired or was revoked. */
+export function isAdminSessionExpiredErrorMessage(message: string): boolean {
+  return /session expired|sign in again at \/admin\/login/i.test(message);
 }
 
 /** Avoids throwing when the Django server is not running (ECONNREFUSED). */
@@ -144,21 +154,32 @@ export async function getCategory(slug: string): Promise<Category | null> {
   return res.json();
 }
 
-export async function getProducts(params?: { category?: string; featured?: boolean; trending?: boolean }): Promise<Product[]> {
+export async function getProducts(params?: {
+  category?: string;
+  featured?: boolean;
+  trending?: boolean;
+  search?: string;
+}): Promise<Product[]> {
   const searchParams = new URLSearchParams();
   if (params?.category) searchParams.append("categorySlug", params.category);
   if (params?.featured) searchParams.append("featured", "true");
   if (params?.trending) searchParams.append("trending", "true");
-  
+  const q = params?.search?.trim();
+  if (q) searchParams.append("search", q);
+
   const queryString = searchParams.toString() ? `?${searchParams.toString()}` : "";
-  const res = await apiFetch(`${API_URL}/products/${queryString}`, { next: { revalidate: 60 } });
+  const fetchInit: RequestInit = q
+    ? { cache: "no-store" }
+    : { next: { revalidate: 60 } };
+  const res = await apiFetch(`${API_URL}/products/${queryString}`, fetchInit);
   if (!res?.ok) return [];
   const data: Product[] = await res.json();
   return Array.isArray(data) ? data.map((p) => normalizeProductImages(p)) : data;
 }
 
 export async function getProduct(slug: string): Promise<Product | null> {
-  const res = await apiFetch(`${API_URL}/products/${slug}/`, { next: { revalidate: 60 } });
+  const safe = encodeURIComponent(slug);
+  const res = await apiFetch(`${API_URL}/products/${safe}/`, { next: { revalidate: 60 } });
   if (!res?.ok) return null;
   const data: Product = await res.json();
   return normalizeProductImages(data);
@@ -236,23 +257,85 @@ export async function getOrders(token?: string | null): Promise<Order[]> {
   return res.json();
 }
 
-export async function login(credentials: any): Promise<{ access: string }> {
+export async function login(credentials: {
+  username: string;
+  password: string;
+}): Promise<{ access: string }> {
   const res = await apiFetch(`${API_URL}/auth/token/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(credentials),
   });
-  if (!res?.ok) throw new Error("Login failed");
+  if (!res?.ok) {
+    throw new Error(await extractApiErrorMessage(res, "Sign-in failed"));
+  }
   return res.json();
 }
 
-export async function createOrder(orderData: any): Promise<Order> {
+export async function changeAdminPassword(
+  body: { currentPassword: string; newPassword: string },
+  token: string,
+): Promise<void> {
+  const res = await apiFetch(`${API_URL}/auth/change-password/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      currentPassword: body.currentPassword,
+      newPassword: body.newPassword,
+    }),
+  });
+  if (!res?.ok) {
+    throw new Error(await extractApiErrorMessage(res, "Password change failed"));
+  }
+}
+
+export type AdminProfile = {
+  username: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+};
+
+export async function getAdminProfile(token: string): Promise<AdminProfile> {
+  const res = await apiFetch(`${API_URL}/auth/me/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res?.ok) {
+    throw new Error(await extractApiErrorMessage(res, "Failed to load profile"));
+  }
+  return res.json();
+}
+
+export async function patchAdminProfile(
+  body: Partial<Pick<AdminProfile, "firstName" | "lastName" | "email">>,
+  token: string,
+): Promise<AdminProfile> {
+  const res = await apiFetch(`${API_URL}/auth/me/`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res?.ok) {
+    throw new Error(await extractApiErrorMessage(res, "Failed to update profile"));
+  }
+  return res.json();
+}
+
+export async function createOrder(orderData: Record<string, unknown>): Promise<Order> {
   const res = await apiFetch(`${API_URL}/orders/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(orderData),
   });
-  if (!res?.ok) throw new Error("Order creation failed");
+  if (!res?.ok) {
+    throw new Error(await extractApiErrorMessage(res, "Order creation failed"));
+  }
   return res.json();
 }
 

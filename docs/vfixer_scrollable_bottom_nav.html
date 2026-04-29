@@ -1,0 +1,262 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.phone {
+  width: 320px; height: 580px;
+  background: #f1f3f5;
+  border: 0.5px solid var(--color-border-secondary);
+  border-radius: 28px; overflow: hidden;
+  position: relative; margin: 1rem auto;
+  display: flex; flex-direction: column;
+}
+.topbar {
+  background: var(--color-background-primary);
+  border-bottom: 0.5px solid var(--color-border-tertiary);
+  padding: 10px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.topbar-logo { font-size: 17px; font-weight: 500; color: var(--color-text-primary); }
+.topbar-logo span { color: #1d9bf0; }
+.icon-btn {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--color-background-secondary);
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.page-content { flex: 1; overflow-y: auto; padding: 16px; display: none; }
+.page-content.active { display: block; }
+.page-title { font-size: 20px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 4px; }
+.page-sub { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 16px; }
+.stat-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; margin-bottom: 12px; }
+.stat-card { background: var(--color-background-primary); border-radius: var(--border-radius-lg); border: 0.5px solid var(--color-border-tertiary); padding: 12px; }
+.stat-label { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 6px; }
+.stat-val { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+.section-card { background: var(--color-background-primary); border-radius: var(--border-radius-lg); border: 0.5px solid var(--color-border-tertiary); padding: 12px; margin-bottom: 8px; }
+.section-header { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+.list-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.list-row:last-child { border-bottom: none; }
+.thumb { width: 32px; height: 32px; border-radius: 6px; background: var(--color-background-secondary); flex-shrink: 0; }
+.row-name { font-size: 12px; color: var(--color-text-primary); flex: 1; }
+.row-meta { font-size: 11px; color: var(--color-text-secondary); }
+.badge { font-size: 10px; padding: 2px 7px; border-radius: 20px; white-space: nowrap; }
+.bg { background: #EAF3DE; color: #3B6D11; }
+.br { background: #FCEBEB; color: #A32D2D; }
+.bb { background: #E6F1FB; color: #0C447C; }
+.chart-bars { display: flex; align-items: flex-end; gap: 4px; height: 56px; }
+.bar { flex: 1; background: #1d9bf020; border-radius: 3px 3px 0 0; }
+.bar.hi { background: #1d9bf0; }
+.bar-labels { display: flex; gap: 4px; margin-top: 3px; }
+.bar-lbl { flex: 1; font-size: 9px; color: var(--color-text-tertiary); text-align: center; }
+.placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px; gap: 8px; }
+.placeholder-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); display: flex; align-items: center; justify-content: center; }
+.placeholder-label { font-size: 13px; color: var(--color-text-secondary); }
+
+.bottom-nav-wrap {
+  background: var(--color-background-primary);
+  border-top: 0.5px solid var(--color-border-tertiary);
+  flex-shrink: 0; position: relative;
+}
+.bottom-nav {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 0 4px 4px;
+}
+.bottom-nav::-webkit-scrollbar { display: none; }
+.nav-item {
+  flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 8px 10px 4px; cursor: pointer;
+  border: none; background: transparent;
+  gap: 3px; scroll-snap-align: start;
+  position: relative; min-width: 56px;
+}
+.nav-label { font-size: 9px; color: var(--color-text-tertiary); white-space: nowrap; }
+.nav-item.active .nav-label { color: #1d9bf0; }
+.nav-item.active svg { color: #1d9bf0 !important; }
+.nav-dot {
+  position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%);
+  width: 4px; height: 4px; border-radius: 50%; background: #1d9bf0;
+  opacity: 0;
+}
+.nav-item.active .nav-dot { opacity: 1; }
+.fade-right {
+  position: absolute; right: 0; top: 0; bottom: 0; width: 24px;
+  background: linear-gradient(to right, transparent, var(--color-background-primary));
+  pointer-events: none;
+}
+</style>
+
+<h2 class="sr-only">V-fixer admin — all nav items in a horizontally scrollable bottom tab bar</h2>
+
+<div style="padding: 0.5rem 0;">
+<div class="phone">
+
+  <div class="topbar">
+    <div class="topbar-logo"><span>V</span>-fixer Admin</div>
+    <div style="display:flex;gap:8px;">
+      <button class="icon-btn">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 4h10l-1.2 7H4.2L3 4z" stroke="var(--color-text-secondary)" stroke-width="1.3" stroke-linejoin="round"/><circle cx="6.5" cy="14" r="1" fill="var(--color-text-secondary)"/><circle cx="10.5" cy="14" r="1" fill="var(--color-text-secondary)"/></svg>
+      </button>
+      <button class="icon-btn">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="var(--color-text-secondary)" stroke-width="1.3"/><path d="M2 14c0-3 2.5-4.5 6-4.5S14 11 14 14" stroke="var(--color-text-secondary)" stroke-width="1.3" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="page-content active" id="p-overview">
+    <div class="page-title">Vue d'ensemble</div>
+    <div class="page-sub">Aperçu boutique</div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-label">Produits</div><div class="stat-val">35</div></div>
+      <div class="stat-card"><div class="stat-label">Catégories</div><div class="stat-val">18</div></div>
+      <div class="stat-card"><div class="stat-label">Commandes</div><div class="stat-val">5</div></div>
+      <div class="stat-card"><div class="stat-label">Chiffre d'aff.</div><div class="stat-val" style="font-size:15px;">94k MAD</div></div>
+    </div>
+    <div class="section-card">
+      <div class="section-header">Ventes — 7 jours</div>
+      <div class="chart-bars" id="chart"></div>
+      <div class="bar-labels" id="chart-labels"></div>
+    </div>
+  </div>
+
+  <div class="page-content" id="p-produits">
+    <div class="page-title">Produits</div><div class="page-sub">35 articles</div>
+    <div class="section-card">
+      <div class="list-row"><div class="thumb" style="background:#e6f1fb;"></div><div class="row-name">YCS 6558X main model</div><div style="text-align:right"><div class="row-meta">3 300 MAD</div><span class="badge bg">Active</span></div></div>
+      <div class="list-row"><div class="thumb" style="background:#faeeda;"></div><div class="row-name">YCS R1 PRO HOT AIR</div><div style="text-align:right"><div class="row-meta">1 900 MAD</div><span class="badge bg">Active</span></div></div>
+      <div class="list-row"><div class="thumb" style="background:#eaf3de;"></div><div class="row-name">YCS-X80 4K Camera</div><div style="text-align:right"><div class="row-meta">1 500 MAD</div><span class="badge br">Rupture</span></div></div>
+      <div class="list-row"><div class="thumb" style="background:#fcebeb;"></div><div class="row-name">Shenlong UV Laser</div><div style="text-align:right"><div class="row-meta">38 000 MAD</div><span class="badge bg">Active</span></div></div>
+    </div>
+  </div>
+
+  <div class="page-content" id="p-hero">
+    <div class="page-title">Accueil hero</div><div class="page-sub">Bannières et sections</div>
+    <div class="placeholder"><div class="placeholder-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="12" rx="2" stroke="var(--color-text-tertiary)" stroke-width="1.3"/><path d="M2 8h16" stroke="var(--color-text-tertiary)" stroke-width="1.3"/></svg></div><div class="placeholder-label">Gérer les bannières</div></div>
+  </div>
+
+  <div class="page-content" id="p-ventes">
+    <div class="page-title">Meilleures ventes</div><div class="page-sub">Ce mois</div>
+    <div class="section-card">
+      <div class="list-row"><div style="font-size:13px;font-weight:500;color:#1d9bf0;width:18px;flex-shrink:0;">1</div><div class="thumb" style="background:#e6f1fb;"></div><div class="row-name">YCS 6558X main model</div><div class="row-meta">12 ventes</div></div>
+      <div class="list-row"><div style="font-size:13px;font-weight:500;color:#1d9bf0;width:18px;flex-shrink:0;">2</div><div class="thumb" style="background:#faeeda;"></div><div class="row-name">YCS R1 PRO HOT AIR</div><div class="row-meta">9 ventes</div></div>
+      <div class="list-row"><div style="font-size:13px;font-weight:500;color:var(--color-text-tertiary);width:18px;flex-shrink:0;">3</div><div class="thumb" style="background:#eaf3de;"></div><div class="row-name">YCS-C08</div><div class="row-meta">7 ventes</div></div>
+      <div class="list-row"><div style="font-size:13px;font-weight:500;color:var(--color-text-tertiary);width:18px;flex-shrink:0;">4</div><div class="thumb" style="background:#fcebeb;"></div><div class="row-name">Torque Screwdriver</div><div class="row-meta">5 ventes</div></div>
+    </div>
+  </div>
+
+  <div class="page-content" id="p-categories">
+    <div class="page-title">Catégories</div><div class="page-sub">18 catégories</div>
+    <div class="section-card">
+      <div class="list-row"><div class="row-name">HOT AIR STATION</div><span class="badge bb">4 produits</span></div>
+      <div class="list-row"><div class="row-name">THERMAL CAMERA</div><span class="badge bb">3 produits</span></div>
+      <div class="list-row"><div class="row-name">MICROSCOPS</div><span class="badge bb">6 produits</span></div>
+      <div class="list-row"><div class="row-name">SOLDERING STATION</div><span class="badge bb">5 produits</span></div>
+      <div class="list-row"><div class="row-name">PCB FIXTURES</div><span class="badge bb">2 produits</span></div>
+    </div>
+  </div>
+
+  <div class="page-content" id="p-commandes">
+    <div class="page-title">Commandes</div><div class="page-sub">5 commandes</div>
+    <div class="section-card">
+      <div class="list-row"><div style="flex:1"><div style="font-size:12px;font-weight:500;color:var(--color-text-primary)">#CMD-0041</div><div class="row-meta">28 avr 2026</div></div><span class="badge bg">Livrée</span><div style="font-size:12px;font-weight:500;margin-left:8px;">3 300</div></div>
+      <div class="list-row"><div style="flex:1"><div style="font-size:12px;font-weight:500;color:var(--color-text-primary)">#CMD-0040</div><div class="row-meta">27 avr 2026</div></div><span class="badge bb">En cours</span><div style="font-size:12px;font-weight:500;margin-left:8px;">1 900</div></div>
+      <div class="list-row"><div style="flex:1"><div style="font-size:12px;font-weight:500;color:var(--color-text-primary)">#CMD-0039</div><div class="row-meta">25 avr 2026</div></div><span class="badge br">Annulée</span><div style="font-size:12px;font-weight:500;margin-left:8px;">500</div></div>
+    </div>
+  </div>
+
+  <div class="page-content" id="p-import">
+    <div class="page-title">Import</div><div class="page-sub">Importer des produits</div>
+    <div class="placeholder"><div class="placeholder-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3v10M6 9l4 4 4-4" stroke="var(--color-text-tertiary)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 15h14" stroke="var(--color-text-tertiary)" stroke-width="1.3" stroke-linecap="round"/></svg></div><div class="placeholder-label">Importer via CSV</div></div>
+  </div>
+
+  <div class="page-content" id="p-profil">
+    <div class="page-title">Profil</div><div class="page-sub">Votre compte</div>
+    <div class="section-card" style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+      <div style="width:44px;height:44px;border-radius:50%;background:#e6f1fb;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:500;color:#0C447C;flex-shrink:0;">A</div>
+      <div><div style="font-size:14px;font-weight:500;color:var(--color-text-primary);">Admin V-fixer</div><div style="font-size:12px;color:var(--color-text-secondary);">admin@v-fixer.ma</div></div>
+    </div>
+  </div>
+
+  <div class="bottom-nav-wrap">
+    <nav class="bottom-nav" id="bottom-nav">
+      <button class="nav-item active" data-page="overview" onclick="switchTab(this)">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" color="var(--color-text-tertiary)"><rect x="3" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.4"/><rect x="11" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.4"/><rect x="3" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.4"/><rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.4"/></svg>
+        <span class="nav-label">Accueil</span>
+        <span class="nav-dot"></span>
+      </button>
+      <button class="nav-item" data-page="produits" onclick="switchTab(this)">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" color="var(--color-text-tertiary)"><path d="M4 7l6-4 6 4v9a1 1 0 01-1 1H5a1 1 0 01-1-1V7z" stroke="currentColor" stroke-width="1.4"/><path d="M8 17v-5h4v5" stroke="currentColor" stroke-width="1.4"/></svg>
+        <span class="nav-label">Produits</span>
+        <span class="nav-dot"></span>
+      </button>
+      <button class="nav-item" data-page="hero" onclick="switchTab(this)">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" color="var(--color-text-tertiary)"><rect x="2" y="4" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M2 8h16" stroke="currentColor" stroke-width="1.4"/></svg>
+        <span class="nav-label">Hero</span>
+        <span class="nav-dot"></span>
+      </button>
+      <button class="nav-item" data-page="ventes" onclick="switchTab(this)">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" color="var(--color-text-tertiary)"><path d="M3 15l4-5 3 3 3-4 4-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="nav-label">Top ventes</span>
+        <span class="nav-dot"></span>
+      </button>
+      <button class="nav-item" data-page="categories" onclick="switchTab(this)">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" color="var(--color-text-tertiary)"><path d="M3 5h14M3 10h9M3 15h6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <span class="nav-label">Catégories</span>
+        <span class="nav-dot"></span>
+      </button>
+      <button class="nav-item" data-page="commandes" onclick="switchTab(this)">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" color="var(--color-text-tertiary)"><path d="M3 4h14l-1.5 8H4.5L3 4z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><circle cx="7.5" cy="16" r="1.2" fill="currentColor"/><circle cx="13" cy="16" r="1.2" fill="currentColor"/></svg>
+        <span class="nav-label">Commandes</span>
+        <span class="nav-dot"></span>
+      </button>
+      <button class="nav-item" data-page="import" onclick="switchTab(this)">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" color="var(--color-text-tertiary)"><path d="M10 3v10M6 9l4 4 4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 15h14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <span class="nav-label">Import</span>
+        <span class="nav-dot"></span>
+      </button>
+      <button class="nav-item" data-page="profil" onclick="switchTab(this)">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" color="var(--color-text-tertiary)"><circle cx="10" cy="7" r="3" stroke="currentColor" stroke-width="1.4"/><path d="M3 18c0-3.5 3-5.5 7-5.5s7 2 7 5.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <span class="nav-label">Profil</span>
+        <span class="nav-dot"></span>
+      </button>
+    </nav>
+    <div class="fade-right"></div>
+  </div>
+
+</div>
+</div>
+
+<script>
+const pages = ['overview','produits','hero','ventes','categories','commandes','import','profil'];
+
+function switchTab(btn) {
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  pages.forEach(id => { const p = document.getElementById('p-'+id); if(p) p.classList.remove('active'); });
+  btn.classList.add('active');
+  const page = btn.getAttribute('data-page');
+  const p = document.getElementById('p-'+page);
+  if(p) p.classList.add('active');
+  btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+}
+
+const days = ['L','M','M','J','V','S','D'];
+const vals = [2,5,3,8,6,11,7];
+const max = Math.max(...vals);
+const chart = document.getElementById('chart');
+const lbls = document.getElementById('chart-labels');
+days.forEach((d,i) => {
+  const b = document.createElement('div');
+  b.className = 'bar' + (i===5?' hi':'');
+  b.style.cssText = `flex:1;height:${Math.round((vals[i]/max)*100)}%;border-radius:3px 3px 0 0;`;
+  b.style.background = i===5 ? '#1d9bf0' : '#1d9bf025';
+  chart.appendChild(b);
+  const l = document.createElement('div');
+  l.className = 'bar-lbl'; l.textContent = d;
+  lbls.appendChild(l);
+});
+document.querySelector('[data-page="overview"]').style.color = '#1d9bf0';
+</script>

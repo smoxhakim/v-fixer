@@ -336,3 +336,144 @@ class CategoryDeleteApiTests(TestCase):
         res = self.client.delete("/api/categories/leaf-cat/")
         self.assertEqual(res.status_code, 400)
         self.assertIn("subcategor", str(res.data.get("detail", "")).lower())
+
+
+class ProductSearchApiTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.cat = Category.objects.create(name="Electronics", slug="electronics")
+        Product.objects.create(
+            name="Unique Widget Pro",
+            slug="unique-widget-pro",
+            category=self.cat,
+            price="10.00",
+            stock=1,
+            short_description="A handy widget",
+            images=[],
+        )
+        Product.objects.create(
+            name="Other Item",
+            slug="other-item",
+            category=self.cat,
+            price="20.00",
+            stock=2,
+            short_description="",
+            images=[],
+        )
+
+    def test_products_search_by_name(self):
+        res = self.client.get("/api/products/", {"search": "Widget"})
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(len(res.data), 1)
+        self.assertEqual(res.data[0]["slug"], "unique-widget-pro")
+
+    def test_products_search_by_short_description(self):
+        res = self.client.get("/api/products/", {"search": "handy"})
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(len(res.data), 1)
+
+    def test_products_search_empty_returns_all(self):
+        res = self.client.get("/api/products/", {"search": "  "})
+        self.assertEqual(res.status_code, 200)
+        self.assertGreaterEqual(len(res.data), 2)
+
+
+class AdminAuthApiTests(TestCase):
+    def setUp(self):
+        user_model = get_user_model()
+        self.staff = user_model.objects.create_user(
+            username="staff_auth",
+            email="staff@example.com",
+            password="oldpass12",
+            is_staff=True,
+        )
+        self.non_staff = user_model.objects.create_user(
+            username="regular_auth",
+            email="reg@example.com",
+            password="userpass12",
+            is_staff=False,
+        )
+
+    def test_token_rejected_for_non_staff(self):
+        client = APIClient()
+        res = client.post(
+            "/api/auth/token/",
+            {"username": "regular_auth", "password": "userpass12"},
+            format="json",
+        )
+        self.assertIn(res.status_code, (400, 401))
+
+    def test_token_ok_for_staff(self):
+        client = APIClient()
+        res = client.post(
+            "/api/auth/token/",
+            {"username": "staff_auth", "password": "oldpass12"},
+            format="json",
+        )
+        self.assertEqual(res.status_code, 200)
+        self.assertIn("access", res.data)
+
+    def test_change_password_requires_auth(self):
+        client = APIClient()
+        res = client.post(
+            "/api/auth/change-password/",
+            {"currentPassword": "oldpass12", "newPassword": "newpass12x"},
+            format="json",
+        )
+        self.assertEqual(res.status_code, 401)
+
+    def test_change_password_staff_success(self):
+        client = APIClient()
+        client.force_authenticate(user=self.staff)
+        res = client.post(
+            "/api/auth/change-password/",
+            {"currentPassword": "oldpass12", "newPassword": "newpass12x"},
+            format="json",
+        )
+        self.assertEqual(res.status_code, 200)
+        self.staff.refresh_from_db()
+        self.assertTrue(self.staff.check_password("newpass12x"))
+
+    def test_change_password_wrong_current(self):
+        client = APIClient()
+        client.force_authenticate(user=self.staff)
+        res = client.post(
+            "/api/auth/change-password/",
+            {"currentPassword": "wrong", "newPassword": "newpass12x"},
+            format="json",
+        )
+        self.assertEqual(res.status_code, 400)
+
+    def test_me_requires_auth(self):
+        client = APIClient()
+        res = client.get("/api/auth/me/", format="json")
+        self.assertEqual(res.status_code, 401)
+
+    def test_me_non_staff_forbidden(self):
+        client = APIClient()
+        client.force_authenticate(user=self.non_staff)
+        res = client.get("/api/auth/me/", format="json")
+        self.assertEqual(res.status_code, 403)
+
+    def test_me_staff_get(self):
+        client = APIClient()
+        client.force_authenticate(user=self.staff)
+        res = client.get("/api/auth/me/", format="json")
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data["username"], "staff_auth")
+        self.assertEqual(res.data["email"], "staff@example.com")
+
+    def test_me_staff_patch_name(self):
+        client = APIClient()
+        client.force_authenticate(user=self.staff)
+        res = client.patch(
+            "/api/auth/me/",
+            {"firstName": "Pat", "lastName": "Admin"},
+            format="json",
+        )
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data["firstName"], "Pat")
+        self.assertEqual(res.data["lastName"], "Admin")
+        self.staff.refresh_from_db()
+        self.assertEqual(self.staff.first_name, "Pat")
+        self.assertEqual(self.staff.last_name, "Admin")

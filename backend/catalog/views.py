@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.db.models import Q
 from rest_framework import viewsets, permissions, status
 from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
@@ -92,6 +93,17 @@ class ProductViewSet(viewsets.ModelViewSet):
         category_slug = self.request.query_params.get('categorySlug', None)
         if category_slug:
             queryset = queryset.filter(category__slug=category_slug)
+        search = (
+            self.request.query_params.get('search')
+            or self.request.query_params.get('q')
+            or ''
+        ).strip()
+        if search:
+            queryset = queryset.filter(
+                Q(name__icontains=search)
+                | Q(slug__icontains=search)
+                | Q(short_description__icontains=search)
+            )
         return queryset
 
     @action(
