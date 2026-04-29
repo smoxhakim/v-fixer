@@ -5,6 +5,9 @@
     "node": ">=20.9.0"
   },
   "workspaces": ["frontend"],
+  "dependencies": {
+    "next": "16.1.6"
+  },
   "scripts": {
     "dev": "npm run dev -w vfxer-web",
     "build": "npm run build -w vfxer-web",
