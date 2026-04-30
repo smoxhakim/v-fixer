@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, HomeBestSellingItem, HomeHeroItem, Product
+from .models import Category, HomeBestSellingItem, HomeHeroItem, HotDealItem, Product
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -189,3 +189,37 @@ class HomeBestSellingUpdateSerializer(serializers.Serializer):
         max_length=30,
         allow_empty=True,
     )
+
+
+def build_hot_deals_response(request=None):
+    qs = HotDealItem.objects.select_related("product").order_by("position")
+    ctx = {"request": request} if request else {}
+    return {
+        "items": [
+            ProductSerializer(row.product, context=ctx).data for row in qs
+        ],
+    }
+
+
+class HotDealsUpdateSerializer(serializers.Serializer):
+    product_slugs = serializers.ListField(
+        child=serializers.CharField(max_length=255),
+        max_length=30,
+        allow_empty=True,
+    )
+
+    def validate_product_slugs(self, slugs):
+        out = []
+        seen = set()
+        for raw in slugs:
+            s = (raw or "").strip()
+            if not s:
+                raise serializers.ValidationError("Product slugs cannot be empty.")
+            if s in seen:
+                continue
+            seen.add(s)
+            out.append(s)
+        for s in out:
+            if not Product.objects.filter(slug=s).exists():
+                raise serializers.ValidationError(f"Unknown product slug: {s}")
+        return out

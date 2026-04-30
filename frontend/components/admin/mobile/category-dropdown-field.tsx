@@ -22,6 +22,8 @@ export type CategoryDropdownFieldProps = {
   onSelect: (id: number | null) => void;
   disabled?: boolean;
   id?: string;
+  /** Merged into the trigger button (e.g. compact table sizing). */
+  triggerClassName?: string;
 };
 
 function labelFor(categories: AdminCategory[], selectedId: number | null): string {
@@ -39,6 +41,7 @@ export function CategoryDropdownField({
   onSelect,
   disabled,
   id,
+  triggerClassName,
 }: CategoryDropdownFieldProps) {
   const value = selectedId === null ? NONE_VALUE : String(selectedId);
 
@@ -53,6 +56,7 @@ export function CategoryDropdownField({
           className={cn(
             "h-11 w-full justify-between gap-2 px-3 font-normal",
             !selectedId && "text-muted-foreground",
+            triggerClassName,
           )}
           aria-label="Category"
         >
@@ -65,7 +69,7 @@ export function CategoryDropdownField({
         side="bottom"
         sideOffset={4}
         className={cn(
-          "z-[100] flex max-h-[min(50vh,280px)] w-[var(--radix-dropdown-menu-trigger-width)] flex-col overflow-hidden p-0",
+          "z-[100] flex max-h-[min(50vh,320px)] w-[var(--radix-dropdown-menu-trigger-width)] min-w-[12rem] flex-col overflow-hidden p-0",
         )}
       >
         <DropdownMenuLabel className="shrink-0 border-b px-2 py-1.5 text-xs font-normal text-muted-foreground">

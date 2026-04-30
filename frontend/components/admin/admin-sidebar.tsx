@@ -11,6 +11,7 @@ import {
   FileUp,
   LayoutTemplate,
   TrendingUp,
+  Flame,
   User,
 } from "lucide-react";
 
@@ -28,6 +29,7 @@ export const adminNavLinks = [
   { href: "/admin/dashboard/products", labelKey: "products" as const, icon: Package },
   { href: "/admin/dashboard/home-hero", labelKey: "homeHero" as const, icon: LayoutTemplate },
   { href: "/admin/dashboard/best-selling", labelKey: "bestSelling" as const, icon: TrendingUp },
+  { href: "/admin/dashboard/hot-deals", labelKey: "hotDeals" as const, icon: Flame },
   { href: "/admin/dashboard/categories", labelKey: "categories" as const, icon: FolderTree },
   { href: "/admin/dashboard/orders", labelKey: "orders" as const, icon: ShoppingCart },
   { href: "/admin/dashboard/import", labelKey: "import" as const, icon: FileUp },
@@ -54,33 +56,42 @@ export function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden w-full shrink-0 md:block md:w-56 lg:w-60">
-      <nav className="flex flex-col gap-1 pr-4" aria-label={t("navAria")}>
-        <Link
-          href="/admin/dashboard"
-          className="mb-2 rounded-lg px-3 py-2 text-lg font-bold tracking-tight text-foreground hover:bg-muted"
+    <aside className="sticky top-6 z-30 hidden w-56 shrink-0 self-start md:flex md:flex-col lg:w-60">
+      <div className="flex min-h-0 flex-1 flex-col border-border md:border-e md:pe-3">
+        <div className="mb-2">
+          <Link
+            href="/admin/dashboard"
+            className="block min-w-0 truncate rounded-lg px-3 py-2 text-lg font-bold leading-tight tracking-tight text-foreground transition-colors hover:bg-muted"
+            title={tLayout("brand")}
+          >
+            {tLayout("brand")}
+          </Link>
+        </div>
+
+        <nav
+          className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain pr-1 [-webkit-overflow-scrolling:touch]"
+          aria-label={t("navAria")}
         >
-          {tLayout("brand")}
-        </Link>
-        {adminNavLinks.map(({ href, labelKey, icon: Icon }) => {
-          const active = isNavActive(pathname, href);
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                active
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
-              )}
-            >
-              <Icon className="size-4 shrink-0" aria-hidden />
-              {t(labelKey)}
-            </Link>
-          );
-        })}
-      </nav>
+          {adminNavLinks.map(({ href, labelKey, icon: Icon }) => {
+            const active = isNavActive(pathname, href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={cn(
+                  "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  active
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+              >
+                <Icon className="size-4 shrink-0" aria-hidden />
+                <span className="truncate">{t(labelKey)}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
     </aside>
   );
 }

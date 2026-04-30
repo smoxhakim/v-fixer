@@ -45,7 +45,10 @@
     "newsletterHint": "اشترك للحصول على العروض والجديد.",
     "emailPlaceholder": "بريدك الإلكتروني",
     "subscribe": "اشتراك",
-    "copyright": "2026 V-fixer. جميع الحقوق محفوظة."
+    "copyright": "2026 V-fixer. جميع الحقوق محفوظة.",
+    "adminHeading": "الإدارة",
+    "adminLoginLink": "دخول لوحة الإدارة",
+    "adminLogoutLink": "تسجيل الخروج"
   },
   "TrustBadges": {
     "deliveryTitle": "توصيل مجاني",
@@ -59,7 +62,7 @@
   },
   "Hero": {
     "shopNow": "تسوق الآن",
-    "shopNowSide": "تسوق ←",
+    "shopNowSide": "تسوق",
     "prevSlide": "الشريحة السابقة",
     "nextSlide": "الشريحة التالية",
     "goToSlide": "انتقل إلى الشريحة {n}"
@@ -85,6 +88,30 @@
     "productsFound": "{count} منتجات",
     "empty": "لا منتجات في هذه الفئة.",
     "backHome": "العودة للرئيسية"
+  },
+  "HotDealsPage": {
+    "home": "الرئيسية",
+    "title": "عروض ساخنة",
+    "productsFound": "{count} منتجات",
+    "emptyDescription": "لا توجد عروض مميزة حالياً.",
+    "browseCatalog": "تصفح كامل المنتجات"
+  },
+  "CategoriesIndex": {
+    "metaTitle": "المجموعات — V-fixer",
+    "metaDescription": "تصفح جميع الفئات واكتشف المنتجات.",
+    "title": "المجموعات",
+    "subtitle": "اختر فئة لعرض كل المنتجات التابعة لها.",
+    "empty": "لا توجد فئات حالياً."
+  },
+  "ProductsPage": {
+    "metaTitle": "المنتجات — V-fixer",
+    "metaDescription": "جميع المنتجات معروضة حسب الفئة.",
+    "title": "المنتجات",
+    "subtitle": "تصفح كل المنتجات مجمّعة حسب الفئة.",
+    "empty": "لا توجد منتجات حالياً.",
+    "sectionEmpty": "لا توجد منتجات في هذه الفئة حالياً.",
+    "viewCategory": "عرض الفئة",
+    "other": "منتجات أخرى"
   },
   "ProductGrid": {},
   "ProductCard": {
@@ -250,6 +277,7 @@
     "products": "المنتجات",
     "homeHero": "الصفحة الرئيسية",
     "bestSelling": "الأكثر مبيعاً",
+    "hotDeals": "عروض ساخنة",
     "categories": "الفئات",
     "orders": "الطلبات",
     "import": "استيراد",
@@ -297,7 +325,27 @@
   "AdminProducts": {
     "title": "المنتجات",
     "addProduct": "إضافة منتج",
-    "inventory": "المخزون"
+    "inventory": "المخزون",
+    "inventoryTitle": "المخزون",
+    "inventoryDescription": "قائمة من واجهة البرمجة. على الجوال، انقر البطاقة لتعديل الفئة والسعر والمخزون. على سطح المكتب، عدّل الفئة والسعر والمخزون والتوفر من الجدول — يُحفظ السعر والمخزون عند مغادرة الحقل أو بالضغط على Enter؛ يُطبَّق التوفر فور اختياره. قائمة الصف للتعديل الكامل أو النسخ أو الحذف.",
+    "colProduct": "المنتج",
+    "colCategory": "الفئة",
+    "colPrice": "السعر",
+    "colStock": "المخزون",
+    "colStatus": "الحالة",
+    "colActions": "إجراءات",
+    "toastNeedToken": "أضف رمز المشرف عبر /admin/login قبل التعديل.",
+    "toastPriceInvalid": "أدخل سعراً صالحاً (صفر أو أكثر).",
+    "toastStockInvalid": "أدخل مخزوناً صحيحاً (عدد صحيح ≥ 0).",
+    "toastPriceUpdated": "تم تحديث السعر",
+    "toastStockUpdated": "تم تحديث المخزون",
+    "toastPriceUpdateFailed": "تعذّر تحديث السعر.",
+    "toastStockUpdateFailed": "تعذّر تحديث المخزون.",
+    "toastAvailabilityUpdated": "تم تحديث التوفر",
+    "toastAvailabilityUpdateFailed": "تعذّر تحديث التوفر.",
+    "toastRestockedToOne": "المخزون أصبح 1 — عدّل الكمية في عمود المخزون إن لزم.",
+    "statusInStock": "متوفر",
+    "statusOutOfStock": "نفد"
   },
   "AdminOrders": {
     "title": "الطلبات"
@@ -313,6 +361,30 @@
   },
   "AdminBestSelling": {
     "title": "الأكثر مبيعاً"
+  },
+  "AdminHotDeals": {
+    "title": "عروض ساخنة",
+    "description": "اختر حتى 30 منتجاً يظهر في صفحة «عروض ساخنة» (/hot-deals). اترك القائمة فارغة واحفظ لعدم عرض منتجات حتى تضيف اختياراً جديداً.",
+    "cardTitle": "المنتجات المميزة",
+    "cardDescription": "ترتيب الصفوف يطابق ترتيب العرض في المتجر.",
+    "emptyRowsHint": "لا صفوف. أضف منتجاً أو احفظ قائمة فارغة لعرض الكل.",
+    "labelProduct": "المنتج",
+    "selectPlaceholder": "اختر منتجاً",
+    "selectDash": "— اختر —",
+    "addRow": "إضافة صف",
+    "save": "حفظ",
+    "saving": "جاري الحفظ…",
+    "loading": "جاري التحميل…",
+    "backDashboard": "العودة للوحة",
+    "previewLink": "معاينة صفحة العروض",
+    "moveUpAria": "تحريك لأعلى",
+    "moveDownAria": "تحريك لأسفل",
+    "removeRowAria": "حذف الصف",
+    "toastSaveOk": "تم حفظ العروض الساخنة.",
+    "toastSaveFail": "تعذر الحفظ.",
+    "toastLoadFailed": "تعذر تحميل البيانات.",
+    "toastNeedSignIn": "سجّل دخول المشرف للحفظ.",
+    "toastEachRowProduct": "كل صف يجب أن يحدد منتجاً (أو احذف الصفوف الفارغة)."
   },
   "AdminProfile": {
     "pageTitle": "ملف المشرف",

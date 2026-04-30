@@ -13,6 +13,7 @@ import { SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useAdminToken } from "@/hooks/use-admin-token";
 import type { AdminCategory, AdminProduct } from "@/lib/admin-types";
+import { parsePriceInput, parseStockInput } from "@/lib/admin-product-input";
 import { isAdminSessionExpiredErrorMessage, updateProductBySlug } from "@/lib/api";
 import { Link } from "@/i18n/navigation";
 
@@ -36,11 +37,6 @@ function categoryIdFromProduct(
 ): number | null {
   if (product.categorySlug == null || product.categorySlug === "") return null;
   return categories.find((c) => c.slug === product.categorySlug)?.id ?? null;
-}
-
-function parsePriceInput(raw: string): number | null {
-  const n = Number(String(raw).trim().replace(",", "."));
-  return Number.isFinite(n) ? n : null;
 }
 
 export function ProductBottomSheet({
@@ -83,12 +79,8 @@ export function ProductBottomSheet({
 
   const stockDirty = stockInput.trim() !== String(baselineStock);
 
-  const stockNum = Number(stockInput.trim());
-  const stockParsable =
-    stockInput.trim() !== "" &&
-    Number.isFinite(stockNum) &&
-    Number.isInteger(stockNum) &&
-    stockNum >= 0;
+  const stockParsed = parseStockInput(stockInput);
+  const stockParsable = stockParsed.ok;
   const stockInvalid = stockDirty && !stockParsable;
 
   const priceParsed = parsePriceInput(priceInput);
@@ -116,7 +108,7 @@ export function ProductBottomSheet({
     const body: Record<string, unknown> = {};
     if (categoryDirty) body.category = pendingCategoryId;
     if (priceDirty && priceParsed !== null) body.price = priceParsed;
-    if (stockDirty && stockParsable) body.stock = stockNum;
+    if (stockDirty && stockParsable) body.stock = stockParsed.value;
 
     if (Object.keys(body).length === 0) return;
 

@@ -1,4 +1,38 @@
+from django.conf import settings
 from django.db import models
+
+
+class StaffProfile(models.Model):
+    """RBAC role for storefront admin API (one per staff user)."""
+
+    ROLE_SUPER_ADMIN = "super_admin"
+    ROLE_ADMIN = "admin"
+    ROLE_MANAGER = "manager"
+    ROLE_CHOICES = [
+        (ROLE_SUPER_ADMIN, "Super admin"),
+        (ROLE_ADMIN, "Admin"),
+        (ROLE_MANAGER, "Manager"),
+    ]
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="staff_profile",
+    )
+    role = models.CharField(
+        max_length=32,
+        choices=ROLE_CHOICES,
+        default=ROLE_MANAGER,
+        db_index=True,
+    )
+
+    class Meta:
+        verbose_name = "Staff profile"
+        verbose_name_plural = "Staff profiles"
+
+    def __str__(self):
+        return f"{self.user_id}:{self.role}"
+
 
 class Category(models.Model):
     name = models.CharField(max_length=255)
@@ -114,3 +148,26 @@ class HomeBestSellingItem(models.Model):
         if self.kind == self.KIND_CATEGORY and self.category_id:
             return f"c:{self.position} {self.category}"
         return f"{self.kind}:{self.position}"
+
+
+class HotDealItem(models.Model):
+    """Curated products for storefront “Offres chaudes” page (/hot-deals)."""
+
+    position = models.PositiveIntegerField(default=0)
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="hot_deal_slots",
+    )
+
+    class Meta:
+        ordering = ["position"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["position"],
+                name="catalog_hotdeal_unique_position",
+            ),
+        ]
+
+    def __str__(self):
+        return f"hot:{self.position} {self.product}"

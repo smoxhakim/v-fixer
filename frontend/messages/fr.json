@@ -45,7 +45,10 @@
     "newsletterHint": "Recevez les offres, nouveautés et promotions.",
     "emailPlaceholder": "Votre e-mail",
     "subscribe": "S’abonner",
-    "copyright": "2026 V-fixer. Tous droits réservés."
+    "copyright": "2026 V-fixer. Tous droits réservés.",
+    "adminHeading": "Administration",
+    "adminLoginLink": "Connexion administrateur",
+    "adminLogoutLink": "Déconnexion"
   },
   "TrustBadges": {
     "deliveryTitle": "LIVRAISON GRATUITE",
@@ -59,7 +62,7 @@
   },
   "Hero": {
     "shopNow": "ACHETER",
-    "shopNowSide": "Acheter →",
+    "shopNowSide": "Acheter",
     "prevSlide": "Diapositive précédente",
     "nextSlide": "Diapositive suivante",
     "goToSlide": "Aller à la diapositive {n}"
@@ -85,6 +88,30 @@
     "productsFound": "{count} produits",
     "empty": "Aucun produit dans cette catégorie.",
     "backHome": "Retour à l’accueil"
+  },
+  "HotDealsPage": {
+    "home": "Accueil",
+    "title": "Offres chaudes",
+    "productsFound": "{count} produits",
+    "emptyDescription": "Aucune offre mise en avant pour le moment.",
+    "browseCatalog": "Voir tout le catalogue"
+  },
+  "CategoriesIndex": {
+    "metaTitle": "Collections — V-fixer",
+    "metaDescription": "Parcourez toutes nos catégories et découvrez les produits.",
+    "title": "Collections",
+    "subtitle": "Choisissez une catégorie pour voir tous les produits associés.",
+    "empty": "Aucune catégorie pour le moment."
+  },
+  "ProductsPage": {
+    "metaTitle": "Produits — V-fixer",
+    "metaDescription": "Tout le catalogue, présenté par catégorie.",
+    "title": "Produits",
+    "subtitle": "Parcourez tous les articles, regroupés par catégorie.",
+    "empty": "Aucun produit pour le moment.",
+    "sectionEmpty": "Aucun produit dans cette catégorie pour le moment.",
+    "viewCategory": "Voir la catégorie",
+    "other": "Autres produits"
   },
   "ProductGrid": {},
   "ProductCard": {
@@ -250,6 +277,7 @@
     "products": "Produits",
     "homeHero": "Accueil hero",
     "bestSelling": "Meilleures ventes",
+    "hotDeals": "Offres chaudes",
     "categories": "Catégories",
     "orders": "Commandes",
     "import": "Import",
@@ -297,7 +325,27 @@
   "AdminProducts": {
     "title": "Produits",
     "addProduct": "Ajouter un produit",
-    "inventory": "Stock"
+    "inventory": "Stock",
+    "inventoryTitle": "Inventaire",
+    "inventoryDescription": "Liste issue de l’API catalogue. Sur mobile, touchez une fiche pour modifier catégorie, prix et stock. Sur ordinateur, modifiez la catégorie, le prix, le stock et la disponibilité (rupture / en stock) directement dans le tableau — prix et stock s’enregistrent à la sortie du champ ou avec Entrée ; la disponibilité s’applique dès le choix dans le menu. Le menu de ligne sert à l’édition complète, la duplication ou la suppression.",
+    "colProduct": "Produit",
+    "colCategory": "Catégorie",
+    "colPrice": "Prix",
+    "colStock": "Stock",
+    "colStatus": "Statut",
+    "colActions": "Actions",
+    "toastNeedToken": "Ajoutez un jeton admin via /admin/login avant de modifier.",
+    "toastPriceInvalid": "Saisissez un prix valide (0 ou plus).",
+    "toastStockInvalid": "Saisissez un stock entier (0 ou plus).",
+    "toastPriceUpdated": "Prix mis à jour",
+    "toastStockUpdated": "Stock mis à jour",
+    "toastPriceUpdateFailed": "Impossible de mettre à jour le prix.",
+    "toastStockUpdateFailed": "Impossible de mettre à jour le stock.",
+    "toastAvailabilityUpdated": "Disponibilité mise à jour",
+    "toastAvailabilityUpdateFailed": "Impossible de mettre à jour la disponibilité.",
+    "toastRestockedToOne": "Stock fixé à 1 — ajustez la quantité dans la colonne Stock si besoin.",
+    "statusInStock": "En stock",
+    "statusOutOfStock": "Rupture"
   },
   "AdminOrders": {
     "title": "Commandes"
@@ -313,6 +361,30 @@
   },
   "AdminBestSelling": {
     "title": "Meilleures ventes"
+  },
+  "AdminHotDeals": {
+    "title": "Offres chaudes",
+    "description": "Choisissez jusqu’à 30 produits affichés sur la page boutique « Offres chaudes » (/hot-deals). Laissez la liste vide et enregistrez pour n’afficher aucun produit sur cette page jusqu’à la prochaine sélection.",
+    "cardTitle": "Produits mis en avant",
+    "cardDescription": "L’ordre des lignes correspond à l’ordre sur la page boutique.",
+    "emptyRowsHint": "Aucune ligne. Ajoutez un produit ou enregistrez une liste vide pour tout afficher.",
+    "labelProduct": "Produit",
+    "selectPlaceholder": "Choisir un produit",
+    "selectDash": "— Choisir —",
+    "addRow": "Ajouter une ligne",
+    "save": "Enregistrer",
+    "saving": "Enregistrement…",
+    "loading": "Chargement…",
+    "backDashboard": "Retour au tableau de bord",
+    "previewLink": "Voir la page Offres chaudes",
+    "moveUpAria": "Monter",
+    "moveDownAria": "Descendre",
+    "removeRowAria": "Supprimer la ligne",
+    "toastSaveOk": "Offres chaudes enregistrées.",
+    "toastSaveFail": "Impossible d’enregistrer.",
+    "toastLoadFailed": "Impossible de charger les données.",
+    "toastNeedSignIn": "Connectez-vous en admin pour enregistrer.",
+    "toastEachRowProduct": "Chaque ligne doit avoir un produit sélectionné (ou supprimez les lignes vides)."
   },
   "AdminProfile": {
     "pageTitle": "Profil administrateur",

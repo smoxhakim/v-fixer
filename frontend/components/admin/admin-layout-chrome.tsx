@@ -27,7 +27,7 @@ export function AdminLayoutChrome({ children }: { children: React.ReactNode }) {
           </div>
         </header>
       ) : null}
-      <main className="mx-auto w-full max-w-screen-2xl flex-1 p-4 py-6 md:px-6">{children}</main>
+      <main className="mx-auto w-full max-w-none flex-1 p-4 py-6 md:px-6 lg:px-8">{children}</main>
     </div>
   );
 }

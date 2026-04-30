@@ -5,14 +5,18 @@ from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Category, HomeBestSellingItem, HomeHeroItem, Product
+from .models import Category, HomeBestSellingItem, HomeHeroItem, HotDealItem, Product
+from .permissions import IsStaffUser, requires_capability
+from .rbac import CAP_CATALOG_WRITE
 from .serializers import (
     CategorySerializer,
     ProductSerializer,
     HomeBestSellingUpdateSerializer,
     HomeHeroUpdateSerializer,
+    HotDealsUpdateSerializer,
     build_home_best_selling_response,
     build_home_hero_response,
+    build_hot_deals_response,
 )
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -31,7 +35,11 @@ class CategoryViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
             return [permissions.AllowAny()]
-        return [permissions.IsAdminUser()]
+        return [
+            permissions.IsAuthenticated(),
+            IsStaffUser(),
+            requires_capability(CAP_CATALOG_WRITE)(),
+        ]
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -64,7 +72,11 @@ class CategoryViewSet(viewsets.ModelViewSet):
         detail=False,
         methods=["post"],
         url_path="import",
-        permission_classes=[permissions.IsAdminUser],
+        permission_classes=[
+            permissions.IsAuthenticated(),
+            IsStaffUser(),
+            requires_capability(CAP_CATALOG_WRITE)(),
+        ],
         parser_classes=[MultiPartParser, FormParser],
     )
     def import_categories(self, request):
@@ -86,7 +98,11 @@ class ProductViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
             return [permissions.AllowAny()]
-        return [permissions.IsAdminUser()]
+        return [
+            permissions.IsAuthenticated(),
+            IsStaffUser(),
+            requires_capability(CAP_CATALOG_WRITE)(),
+        ]
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -110,7 +126,11 @@ class ProductViewSet(viewsets.ModelViewSet):
         detail=False,
         methods=["post"],
         url_path="import",
-        permission_classes=[permissions.IsAdminUser],
+        permission_classes=[
+            permissions.IsAuthenticated(),
+            IsStaffUser(),
+            requires_capability(CAP_CATALOG_WRITE)(),
+        ],
         parser_classes=[MultiPartParser, FormParser],
     )
     def import_products(self, request):
@@ -129,7 +149,11 @@ class ProductViewSet(viewsets.ModelViewSet):
         detail=False,
         methods=["post"],
         url_path="import-preview",
-        permission_classes=[permissions.IsAdminUser],
+        permission_classes=[
+            permissions.IsAuthenticated(),
+            IsStaffUser(),
+            requires_capability(CAP_CATALOG_WRITE)(),
+        ],
         parser_classes=[MultiPartParser, FormParser],
     )
     def import_products_preview(self, request):
@@ -150,7 +174,11 @@ class HomeHeroView(APIView):
     def get_permissions(self):
         if self.request.method in ("GET", "HEAD", "OPTIONS"):
             return [permissions.AllowAny()]
-        return [permissions.IsAdminUser()]
+        return [
+            permissions.IsAuthenticated(),
+            IsStaffUser(),
+            requires_capability(CAP_CATALOG_WRITE)(),
+        ]
 
     def get(self, request):
         return Response(build_home_hero_response())
@@ -175,7 +203,11 @@ class HomeBestSellingView(APIView):
     def get_permissions(self):
         if self.request.method in ("GET", "HEAD", "OPTIONS"):
             return [permissions.AllowAny()]
-        return [permissions.IsAdminUser()]
+        return [
+            permissions.IsAuthenticated(),
+            IsStaffUser(),
+            requires_capability(CAP_CATALOG_WRITE)(),
+        ]
 
     def get(self, request):
         return Response(build_home_best_selling_response(request))
@@ -202,3 +234,32 @@ class HomeBestSellingView(APIView):
                         category=category,
                     )
         return Response(build_home_best_selling_response(request))
+
+
+class HotDealsView(APIView):
+    """Public GET; admin PUT replaces curated “Offres chaudes” products (storefront /hot-deals)."""
+
+    parser_classes = [JSONParser]
+
+    def get_permissions(self):
+        if self.request.method in ("GET", "HEAD", "OPTIONS"):
+            return [permissions.AllowAny()]
+        return [
+            permissions.IsAuthenticated(),
+            IsStaffUser(),
+            requires_capability(CAP_CATALOG_WRITE)(),
+        ]
+
+    def get(self, request):
+        return Response(build_hot_deals_response(request))
+
+    def put(self, request):
+        ser = HotDealsUpdateSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        slugs = ser.validated_data["product_slugs"]
+        with transaction.atomic():
+            HotDealItem.objects.all().delete()
+            for pos, slug in enumerate(slugs):
+                product = Product.objects.get(slug=slug)
+                HotDealItem.objects.create(position=pos, product=product)
+        return Response(build_hot_deals_response(request))

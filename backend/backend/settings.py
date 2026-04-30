@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from datetime import timedelta
 from pathlib import Path
 
@@ -26,7 +27,13 @@ SECRET_KEY = 'django-insecure-c4ka(x)kt#v#z%ssdm)q-yje1k#+i57#wsgsng9ho7uw!156_h
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# Local + LAN testing (e.g. phone hitting http://YOUR_IP:8001). Comma-separated.
+# Example: DJANGO_EXTRA_ALLOWED_HOSTS=10.124.225.157
+_extra_hosts = os.environ.get("DJANGO_EXTRA_ALLOWED_HOSTS", "")
+ALLOWED_HOSTS = [
+    *("localhost", "127.0.0.1", "[::1]"),
+    *(h.strip() for h in _extra_hosts.split(",") if h.strip()),
+]
 
 
 # Application definition

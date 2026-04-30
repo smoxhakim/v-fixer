@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, HomeBestSellingItem, HomeHeroItem, Product
+from .models import Category, HomeBestSellingItem, HomeHeroItem, HotDealItem, Product
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -17,6 +17,12 @@ class HomeHeroItemAdmin(admin.ModelAdmin):
 @admin.register(HomeBestSellingItem)
 class HomeBestSellingItemAdmin(admin.ModelAdmin):
     list_display = ("position", "kind", "product", "category")
+    ordering = ("position",)
+
+
+@admin.register(HotDealItem)
+class HotDealItemAdmin(admin.ModelAdmin):
+    list_display = ("position", "product")
     ordering = ("position",)
 
 

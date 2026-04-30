@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getCategories } from "@/lib/api";
+import { FooterAdminAuth } from "@/components/layout/footer-admin-auth";
 
 export async function Footer() {
   const t = await getTranslations("Footer");
@@ -18,6 +19,12 @@ export async function Footer() {
               </span>
             </Link>
             <p className="text-sm opacity-70 leading-relaxed">{t("tagline")}</p>
+            <div className="mt-6">
+              <h3 className="text-xs font-semibold uppercase tracking-wider opacity-90 mb-2">
+                {t("adminHeading")}
+              </h3>
+              <FooterAdminAuth />
+            </div>
           </div>
 
           {/* Categories */}

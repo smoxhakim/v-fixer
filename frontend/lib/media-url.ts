@@ -1,11 +1,8 @@
-/** Same default as `API_URL` in `@/lib/api` — keep in sync. */
-function apiBaseUrl(): string {
-  return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8001/api";
-}
+import { getApiUrl } from "@/lib/api-url";
 
 /** Origin of the Django app (strip trailing `/api`). */
 export function getApiOrigin(): string {
-  return apiBaseUrl().replace(/\/api\/?$/i, "");
+  return getApiUrl().replace(/\/api\/?$/i, "");
 }
 
 /**

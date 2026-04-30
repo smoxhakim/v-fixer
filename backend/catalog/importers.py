@@ -68,6 +68,21 @@ def parse_first_decimal(raw_value):
         return None
 
 
+def _cell_is_blank(value) -> bool:
+    if value is None:
+        return True
+    if isinstance(value, str) and not value.strip():
+        return True
+    return False
+
+
+def _parse_price_cell(raw_value):
+    """Return Decimal price; blank cell → 0. Non-blank but unparseable → None."""
+    if _cell_is_blank(raw_value):
+        return Decimal("0")
+    return parse_first_decimal(raw_value)
+
+
 def parse_stock(raw_value):
     text = "" if raw_value is None else str(raw_value).strip()
     if not text:
@@ -475,9 +490,14 @@ def _parse_product_rows_from_bytes(data: bytes):
         if not ref_text:
             errors.append(RowError(row_idx, "REF is required.").to_dict())
             continue
-        price = parse_first_decimal(price_raw)
+        price = _parse_price_cell(price_raw)
         if price is None:
-            errors.append(RowError(row_idx, "PRICE has no valid number.").to_dict())
+            errors.append(
+                RowError(
+                    row_idx,
+                    "PRICE is not a valid number (leave the cell empty for 0).",
+                ).to_dict(),
+            )
             continue
         cost_price = parse_first_decimal(cost_raw)
         stock = parse_stock(qt_raw)
@@ -628,15 +648,27 @@ def import_products_zip(upload):
     reader = csv.DictReader(io.StringIO(csv_text))
     for row_idx, row in enumerate(reader, start=2):
         ref = (row.get("REF") or row.get("ref") or "").strip()
-        price = parse_first_decimal(row.get("PRICE") or row.get("price"))
+        price_raw = row.get("PRICE") or row.get("price")
+        if _cell_is_blank(price_raw):
+            price = Decimal("0")
+        else:
+            price = parse_first_decimal(price_raw)
         cost_price = parse_first_decimal(row.get("PRICE ACHA") or row.get("price_acha"))
         stock = parse_stock(row.get("QT") or row.get("qt"))
         category_slug = _normalize_slug(row.get("CATEGORY") or row.get("category") or "")
         category_slug = category_slug or None
         image_paths = (row.get("image_paths") or "").strip()
 
-        if not ref or price is None or stock is None:
+        if not ref or stock is None:
             errors.append(RowError(row_idx, "Invalid row data in products.csv.").to_dict())
+            continue
+        if price is None:
+            errors.append(
+                RowError(
+                    row_idx,
+                    "PRICE is not a valid number (leave the cell empty for 0).",
+                ).to_dict(),
+            )
             continue
         if not category_slug:
             category = None

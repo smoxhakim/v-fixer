@@ -8,6 +8,9 @@ import {
   type HomeHeroSlidePayload,
 } from "@/lib/home-hero";
 import { normalizeProductImages } from "@/lib/media-url";
+import { getApiUrl } from "./api-url";
+
+export { getApiUrl };
 
 export type { BestSellingDisplayRow, BestSellingInputRow, HomeHeroSlidePayload };
 
@@ -43,9 +46,6 @@ export interface Order {
   status: string;
   createdAt: string;
 }
-
-export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8001/api";
 
 /** Flattens DRF-style validation payloads (nested dicts / string arrays) for toasts. */
 function collectDrfMessages(value: unknown, maxLen = 800): string | null {
@@ -140,18 +140,32 @@ export async function apiFetch(
   }
 }
 
+/** Never throws: bad/empty/HTML bodies become `fallback` (avoids SSR 500 when API is down). */
+async function readJsonBody<T>(res: Response, fallback: T): Promise<T> {
+  try {
+    const text = await res.text();
+    if (!text.trim()) return fallback;
+    return JSON.parse(text) as T;
+  } catch {
+    return fallback;
+  }
+}
+
 export async function getCategories(): Promise<Category[]> {
-  const res = await apiFetch(`${API_URL}/categories/`, { next: { revalidate: 60 } });
+  const res = await apiFetch(`${getApiUrl()}/categories/`, { next: { revalidate: 60 } });
   if (!res?.ok) return [];
-  return res.json();
+  const data = await readJsonBody<unknown>(res, []);
+  return Array.isArray(data) ? data : [];
 }
 
 export async function getCategory(slug: string): Promise<Category | null> {
-  const res = await apiFetch(`${API_URL}/categories/${encodeURIComponent(slug)}/`, {
+  const res = await apiFetch(`${getApiUrl()}/categories/${encodeURIComponent(slug)}/`, {
     next: { revalidate: 60 },
   });
   if (!res?.ok) return null;
-  return res.json();
+  const data = await readJsonBody<unknown>(res, null);
+  if (data == null || typeof data !== "object") return null;
+  return data as Category;
 }
 
 export async function getProducts(params?: {
@@ -171,24 +185,25 @@ export async function getProducts(params?: {
   const fetchInit: RequestInit = q
     ? { cache: "no-store" }
     : { next: { revalidate: 60 } };
-  const res = await apiFetch(`${API_URL}/products/${queryString}`, fetchInit);
+  const res = await apiFetch(`${getApiUrl()}/products/${queryString}`, fetchInit);
   if (!res?.ok) return [];
-  const data: Product[] = await res.json();
-  return Array.isArray(data) ? data.map((p) => normalizeProductImages(p)) : data;
+  const data = await readJsonBody<unknown>(res, []);
+  return Array.isArray(data) ? data.map((p) => normalizeProductImages(p as Product)) : [];
 }
 
 export async function getProduct(slug: string): Promise<Product | null> {
   const safe = encodeURIComponent(slug);
-  const res = await apiFetch(`${API_URL}/products/${safe}/`, { next: { revalidate: 60 } });
+  const res = await apiFetch(`${getApiUrl()}/products/${safe}/`, { next: { revalidate: 60 } });
   if (!res?.ok) return null;
-  const data: Product = await res.json();
-  return normalizeProductImages(data);
+  const data = await readJsonBody<unknown>(res, null);
+  if (data == null || typeof data !== "object") return null;
+  return normalizeProductImages(data as Product);
 }
 
 export async function getHomeHero() {
-  const res = await apiFetch(`${API_URL}/home-hero/`, { next: { revalidate: 60 } });
+  const res = await apiFetch(`${getApiUrl()}/home-hero/`, { next: { revalidate: 60 } });
   if (!res?.ok) return null;
-  const raw: unknown = await res.json();
+  const raw = await readJsonBody<unknown>(res, null);
   return normalizeHomeHeroResponse(raw);
 }
 
@@ -196,7 +211,7 @@ export async function updateHomeHero(
   payload: { mainSlides: HomeHeroSlidePayload[]; sidePromos: HomeHeroSlidePayload[] },
   token: string,
 ) {
-  const res = await apiFetch(`${API_URL}/home-hero/`, {
+  const res = await apiFetch(`${getApiUrl()}/home-hero/`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -212,11 +227,11 @@ export async function updateHomeHero(
 }
 
 export async function getHomeBestSelling(): Promise<BestSellingDisplayRow[]> {
-  const res = await apiFetch(`${API_URL}/home-best-selling/`, {
+  const res = await apiFetch(`${getApiUrl()}/home-best-selling/`, {
     next: { revalidate: 60 },
   });
   if (!res?.ok) return [];
-  const raw: unknown = await res.json();
+  const raw = await readJsonBody<unknown>(res, null);
   return normalizeHomeBestSellingResponse(raw);
 }
 
@@ -224,7 +239,7 @@ export async function updateHomeBestSelling(
   items: BestSellingInputRow[],
   token: string,
 ): Promise<BestSellingDisplayRow[]> {
-  const res = await apiFetch(`${API_URL}/home-best-selling/`, {
+  const res = await apiFetch(`${getApiUrl()}/home-best-selling/`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -249,19 +264,48 @@ export async function updateHomeBestSelling(
   return normalizeHomeBestSellingResponse(raw);
 }
 
+export async function getHotDeals(): Promise<Product[]> {
+  const res = await apiFetch(`${getApiUrl()}/hot-deals/`, {
+    next: { revalidate: 60 },
+  });
+  if (!res?.ok) return [];
+  const raw = await readJsonBody<{ items?: unknown }>(res, { items: [] });
+  const items = raw && typeof raw === "object" && Array.isArray(raw.items) ? raw.items : [];
+  return items.map((p) => normalizeProductImages(p as Product));
+}
+
+export async function updateHotDeals(productSlugs: string[], token: string): Promise<Product[]> {
+  const res = await apiFetch(`${getApiUrl()}/hot-deals/`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ product_slugs: productSlugs }),
+  });
+  if (!res?.ok) {
+    throw new Error(await extractApiErrorMessage(res, "Failed to save hot deals"));
+  }
+  const raw: unknown = await res.json();
+  const data = raw && typeof raw === "object" ? (raw as { items?: unknown }).items : [];
+  const items = Array.isArray(data) ? data : [];
+  return items.map((p) => normalizeProductImages(p as Product));
+}
+
 export async function getOrders(token?: string | null): Promise<Order[]> {
   const headers: HeadersInit = {};
   if (token) (headers as Record<string, string>).Authorization = `Bearer ${token}`;
-  const res = await apiFetch(`${API_URL}/orders/`, { headers });
+  const res = await apiFetch(`${getApiUrl()}/orders/`, { headers });
   if (!res?.ok) return [];
-  return res.json();
+  const data = await readJsonBody<unknown>(res, []);
+  return Array.isArray(data) ? data : [];
 }
 
 export async function login(credentials: {
   username: string;
   password: string;
 }): Promise<{ access: string }> {
-  const res = await apiFetch(`${API_URL}/auth/token/`, {
+  const res = await apiFetch(`${getApiUrl()}/auth/token/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(credentials),
@@ -276,7 +320,7 @@ export async function changeAdminPassword(
   body: { currentPassword: string; newPassword: string },
   token: string,
 ): Promise<void> {
-  const res = await apiFetch(`${API_URL}/auth/change-password/`, {
+  const res = await apiFetch(`${getApiUrl()}/auth/change-password/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -300,7 +344,7 @@ export type AdminProfile = {
 };
 
 export async function getAdminProfile(token: string): Promise<AdminProfile> {
-  const res = await apiFetch(`${API_URL}/auth/me/`, {
+  const res = await apiFetch(`${getApiUrl()}/auth/me/`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res?.ok) {
@@ -313,7 +357,7 @@ export async function patchAdminProfile(
   body: Partial<Pick<AdminProfile, "firstName" | "lastName" | "email">>,
   token: string,
 ): Promise<AdminProfile> {
-  const res = await apiFetch(`${API_URL}/auth/me/`, {
+  const res = await apiFetch(`${getApiUrl()}/auth/me/`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -328,7 +372,7 @@ export async function patchAdminProfile(
 }
 
 export async function createOrder(orderData: Record<string, unknown>): Promise<Order> {
-  const res = await apiFetch(`${API_URL}/orders/`, {
+  const res = await apiFetch(`${getApiUrl()}/orders/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(orderData),
@@ -340,7 +384,7 @@ export async function createOrder(orderData: Record<string, unknown>): Promise<O
 }
 
 export async function createProduct(data: any, token: string): Promise<Product> {
-  const res = await apiFetch(`${API_URL}/products/`, {
+  const res = await apiFetch(`${getApiUrl()}/products/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -355,7 +399,7 @@ export async function createProduct(data: any, token: string): Promise<Product> 
 }
 
 export async function createCategory(data: any, token: string): Promise<Category> {
-  const res = await apiFetch(`${API_URL}/categories/`, {
+  const res = await apiFetch(`${getApiUrl()}/categories/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -372,7 +416,7 @@ export async function patchOrder(
   body: Record<string, unknown>,
   token: string,
 ): Promise<Order> {
-  const res = await apiFetch(`${API_URL}/orders/${id}/`, {
+  const res = await apiFetch(`${getApiUrl()}/orders/${id}/`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -398,7 +442,7 @@ export async function updateProductBySlug(
   token: string,
 ): Promise<Product> {
   const res = await apiFetch(
-    `${API_URL}/products/${encodeURIComponent(slug)}/`,
+    `${getApiUrl()}/products/${encodeURIComponent(slug)}/`,
     {
       method: "PATCH",
       headers: {
@@ -413,7 +457,7 @@ export async function updateProductBySlug(
 }
 
 export async function deleteProductBySlug(slug: string, token: string): Promise<void> {
-  const res = await apiFetch(`${API_URL}/products/${encodeURIComponent(slug)}/`, {
+  const res = await apiFetch(`${getApiUrl()}/products/${encodeURIComponent(slug)}/`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -428,7 +472,7 @@ export async function updateCategoryBySlug(
   token: string,
 ): Promise<Category> {
   const res = await apiFetch(
-    `${API_URL}/categories/${encodeURIComponent(slug)}/`,
+    `${getApiUrl()}/categories/${encodeURIComponent(slug)}/`,
     {
       method: "PATCH",
       headers: {
@@ -446,7 +490,7 @@ export async function deleteCategoryBySlug(
   slug: string,
   token: string,
 ): Promise<void> {
-  const res = await apiFetch(`${API_URL}/categories/${encodeURIComponent(slug)}/`, {
+  const res = await apiFetch(`${getApiUrl()}/categories/${encodeURIComponent(slug)}/`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -467,7 +511,7 @@ async function parseImportResponse<T>(res: Response | null, fallbackError: strin
 export async function importCategoriesCsv(file: File, token: string): Promise<ImportResult> {
   const body = new FormData();
   body.append("file", file);
-  const res = await apiFetch(`${API_URL}/categories/import/`, {
+  const res = await apiFetch(`${getApiUrl()}/categories/import/`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -483,7 +527,7 @@ export async function previewProductsXlsx(
 ): Promise<ProductImportPreviewResult> {
   const body = new FormData();
   body.append("file", file);
-  const res = await apiFetch(`${API_URL}/products/import-preview/`, {
+  const res = await apiFetch(`${getApiUrl()}/products/import-preview/`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -496,7 +540,7 @@ export async function previewProductsXlsx(
 export async function importProductsXlsx(file: File, token: string): Promise<ImportResult> {
   const body = new FormData();
   body.append("file", file);
-  const res = await apiFetch(`${API_URL}/products/import/`, {
+  const res = await apiFetch(`${getApiUrl()}/products/import/`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,

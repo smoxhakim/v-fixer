@@ -25,10 +25,12 @@ from catalog.auth_views import (
     AdminProfileView,
     AdminTokenObtainPairView,
 )
+from catalog.staff_user_views import StaffUserDetailView, StaffUserListCreateView
 from catalog.views import (
     CategoryViewSet,
     HomeBestSellingView,
     HomeHeroView,
+    HotDealsView,
     ProductViewSet,
 )
 from orders.views import OrderViewSet
@@ -46,6 +48,7 @@ urlpatterns = [
         HomeBestSellingView.as_view(),
         name='home-best-selling',
     ),
+    path("api/hot-deals/", HotDealsView.as_view(), name="hot-deals"),
     path('api/', include(router.urls)),
     path('api/auth/token/', AdminTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
@@ -55,6 +58,12 @@ urlpatterns = [
         name='auth-change-password',
     ),
     path('api/auth/me/', AdminProfileView.as_view(), name='auth-me'),
+    path('api/auth/staff-users/', StaffUserListCreateView.as_view(), name='auth-staff-users'),
+    path(
+        'api/auth/staff-users/<int:pk>/',
+        StaffUserDetailView.as_view(),
+        name='auth-staff-user-detail',
+    ),
 ]
 
 if settings.DEBUG:

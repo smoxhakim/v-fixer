@@ -12,7 +12,7 @@ from openpyxl.drawing.image import Image as XLImage
 from PIL import Image
 from rest_framework.test import APIClient
 
-from .models import Category, Product
+from .models import Category, HotDealItem, Product, StaffProfile
 
 
 class ImportApiTests(TestCase):
@@ -131,6 +131,23 @@ class ImportApiTests(TestCase):
         self.assertIn(res.status_code, {200, 207})
         product = Product.objects.get(name="No Cat Product")
         self.assertIsNone(product.category_id)
+
+    def test_products_import_blank_price_defaults_to_zero(self):
+        Category.objects.create(name="Tools", slug="tools")
+        rows = [
+            ["", "Zero Price Item", "", "", "1", "tools"],
+        ]
+        prev = self.client.post(
+            "/api/products/import-preview/", {"file": self._xlsx_file(rows)}, format="multipart"
+        )
+        self.assertIn(prev.status_code, {200, 207})
+        self.assertEqual(len(prev.data.get("errors", [])), 0)
+        self.assertEqual(prev.data["rows"][0]["price"], "0")
+
+        res = self.client.post("/api/products/import/", {"file": self._xlsx_file(rows)}, format="multipart")
+        self.assertIn(res.status_code, {200, 207})
+        product = Product.objects.get(name="Zero Price Item")
+        self.assertEqual(product.price, Decimal("0"))
 
     def test_products_duplicate_ref_creates_two_rows_with_unique_slugs(self):
         Category.objects.create(name="Tools", slug="tools")
@@ -301,6 +318,68 @@ class HomeBestSellingApiTests(TestCase):
         self.assertEqual(res.data["items"][1]["product_count"], 1)
 
 
+class HotDealsApiTests(TestCase):
+    def setUp(self):
+        user_model = get_user_model()
+        self.admin = user_model.objects.create_superuser(
+            username="hot_admin",
+            email="hot_admin@example.com",
+            password="pass1234",
+        )
+        self.cat = Category.objects.create(name="Phones", slug="phones")
+        self.p1 = Product.objects.create(
+            name="Phone A",
+            slug="phone-a",
+            category=self.cat,
+            price="10.00",
+            stock=2,
+            images=[],
+        )
+        self.p2 = Product.objects.create(
+            name="Phone B",
+            slug="phone-b",
+            category=self.cat,
+            price="20.00",
+            stock=3,
+            images=[],
+        )
+
+    def test_hot_deals_get_ok(self):
+        client = APIClient()
+        res = client.get("/api/hot-deals/")
+        self.assertEqual(res.status_code, 200)
+        self.assertIn("items", res.data)
+        self.assertEqual(res.data["items"], [])
+
+    def test_hot_deals_put_requires_auth(self):
+        client = APIClient()
+        res = client.put("/api/hot-deals/", {"product_slugs": []}, format="json")
+        self.assertEqual(res.status_code, 401)
+
+    def test_hot_deals_put_ordered(self):
+        client = APIClient()
+        client.force_authenticate(user=self.admin)
+        body = {"product_slugs": ["phone-b", "phone-a"]}
+        res = client.put("/api/hot-deals/", body, format="json")
+        self.assertEqual(res.status_code, 200, res.data)
+        self.assertEqual(len(res.data["items"]), 2)
+        self.assertEqual(res.data["items"][0]["slug"], "phone-b")
+        self.assertEqual(res.data["items"][1]["slug"], "phone-a")
+        self.assertEqual(HotDealItem.objects.count(), 2)
+
+    def test_hot_deals_put_clear(self):
+        client = APIClient()
+        client.force_authenticate(user=self.admin)
+        client.put(
+            "/api/hot-deals/",
+            {"product_slugs": ["phone-a"]},
+            format="json",
+        )
+        res = client.put("/api/hot-deals/", {"product_slugs": []}, format="json")
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data["items"], [])
+
+
 class CategoryDeleteApiTests(TestCase):
     def setUp(self):
         user_model = get_user_model()
@@ -412,6 +491,12 @@ class AdminAuthApiTests(TestCase):
         )
         self.assertEqual(res.status_code, 200)
         self.assertIn("access", res.data)
+        self.assertIn("user", res.data)
+        self.assertEqual(res.data["user"]["username"], "staff_auth")
+        self.assertIn("role", res.data["user"])
+        self.assertIn("capabilities", res.data["user"])
+        self.assertIn("catalog.write", res.data["user"]["capabilities"])
+        self.assertNotIn("users.read", res.data["user"]["capabilities"])
 
     def test_change_password_requires_auth(self):
         client = APIClient()
@@ -472,8 +557,98 @@ class AdminAuthApiTests(TestCase):
             format="json",
         )
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.data["firstName"], "Pat")
-        self.assertEqual(res.data["lastName"], "Admin")
+        fn = res.data.get("firstName") or res.data.get("first_name")
+        ln = res.data.get("lastName") or res.data.get("last_name")
+        self.assertEqual(fn, "Pat")
+        self.assertEqual(ln, "Admin")
         self.staff.refresh_from_db()
         self.assertEqual(self.staff.first_name, "Pat")
         self.assertEqual(self.staff.last_name, "Admin")
+
+
+class StaffUserApiTests(TestCase):
+    """RBAC: only super_admin may list/create/patch staff users via API."""
+
+    def setUp(self):
+        UM = get_user_model()
+        self.super = UM.objects.create_user(
+            username="super_u",
+            email="super@example.com",
+            password="superpass12",
+            is_staff=True,
+        )
+        StaffProfile.objects.create(user=self.super, role=StaffProfile.ROLE_SUPER_ADMIN)
+        self.admin = UM.objects.create_user(
+            username="admin_u",
+            email="admin@example.com",
+            password="adminpass12",
+            is_staff=True,
+        )
+        StaffProfile.objects.create(user=self.admin, role=StaffProfile.ROLE_ADMIN)
+
+    def test_list_staff_users_super_ok(self):
+        client = APIClient()
+        client.force_authenticate(user=self.super)
+        res = client.get("/api/auth/staff-users/")
+        self.assertEqual(res.status_code, 200)
+        self.assertGreaterEqual(len(res.data.get("results", res.data)), 1)
+
+    def test_list_staff_users_admin_forbidden(self):
+        client = APIClient()
+        client.force_authenticate(user=self.admin)
+        res = client.get("/api/auth/staff-users/")
+        self.assertEqual(res.status_code, 403)
+
+    def test_create_staff_user_super_ok(self):
+        client = APIClient()
+        client.force_authenticate(user=self.super)
+        res = client.post(
+            "/api/auth/staff-users/",
+            {
+                "username": "new_mgr",
+                "email": "nm@example.com",
+                "password": "longpass12",
+                "role": StaffProfile.ROLE_MANAGER,
+                "isStaff": True,
+            },
+            format="json",
+        )
+        self.assertEqual(res.status_code, 201)
+        u = get_user_model().objects.get(username="new_mgr")
+        self.assertTrue(u.is_staff)
+        self.assertEqual(u.staff_profile.role, StaffProfile.ROLE_MANAGER)
+
+    def test_cannot_assign_super_admin_via_create(self):
+        client = APIClient()
+        client.force_authenticate(user=self.super)
+        res = client.post(
+            "/api/auth/staff-users/",
+            {
+                "username": "bogus_super",
+                "password": "longpass12",
+                "role": StaffProfile.ROLE_SUPER_ADMIN,
+                "isStaff": True,
+            },
+            format="json",
+        )
+        self.assertEqual(res.status_code, 400)
+
+    def test_patch_role_denies_super_admin_assignment(self):
+        client = APIClient()
+        client.force_authenticate(user=self.super)
+        res = client.patch(
+            f"/api/auth/staff-users/{self.admin.pk}/",
+            {"role": StaffProfile.ROLE_SUPER_ADMIN},
+            format="json",
+        )
+        self.assertEqual(res.status_code, 400)
+
+    def test_cannot_demote_last_super_admin(self):
+        client = APIClient()
+        client.force_authenticate(user=self.super)
+        res = client.patch(
+            f"/api/auth/staff-users/{self.super.pk}/",
+            {"role": StaffProfile.ROLE_ADMIN},
+            format="json",
+        )
+        self.assertEqual(res.status_code, 400)

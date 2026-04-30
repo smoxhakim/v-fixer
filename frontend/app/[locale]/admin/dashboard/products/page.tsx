@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import {
   Copy,
@@ -17,7 +18,6 @@ import { AdminAuthBanner } from "@/components/admin/admin-auth-banner";
 import { AdminEmptyState } from "@/components/admin/admin-empty-state";
 import { AdminErrorState } from "@/components/admin/admin-error-state";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -65,13 +65,17 @@ import {
   adminListCategories,
   adminListProducts,
 } from "@/lib/admin-queries";
-import { parseMoney } from "@/lib/admin-stats";
 import type { AdminCategory, AdminProduct } from "@/lib/admin-types";
 import { createProduct, deleteProductBySlug } from "@/lib/api";
 import { resolveMediaSrc } from "@/lib/media-url";
-import { formatCurrency } from "@/lib/format";
 import { MobileProductCard } from "@/components/admin/mobile/mobile-product-card";
 import { ProductBottomSheet } from "@/components/admin/mobile/product-bottom-sheet";
+import { ProductTableCategoryCell } from "@/components/admin/product-table-category-cell";
+import {
+  ProductTableAvailabilityCell,
+  ProductTablePriceCell,
+  ProductTableStockCell,
+} from "@/components/admin/product-table-inventory-cells";
 
 const NO_CATEGORY_VALUE = "__none__";
 
@@ -83,6 +87,7 @@ function categoryIdFromForm(raw: string): number | null {
 
 export default function AdminProductsPage() {
   const { token, hydrated } = useAdminToken();
+  const tInv = useTranslations("AdminProducts");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [products, setProducts] = useState<AdminProduct[]>([]);
@@ -256,7 +261,7 @@ export default function AdminProductsPage() {
     <div className="space-y-8">
       <AdminPageHeader
         title="Products"
-        description="Manage catalog items. Product status is not stored by the API yet — the UI reserves it for when the backend adds it."
+        description="Manage catalog items. On desktop, price and stock save when you leave the field or press Enter; availability (in stock / out) updates stock via the API."
         actions={
           <Button type="button" variant="outline" size="sm" onClick={() => void load()}>
             Refresh
@@ -448,11 +453,8 @@ export default function AdminProductsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Inventory</CardTitle>
-          <CardDescription>
-            All products from the catalog API. On mobile, tap a card for actions, category, price, and stock; on
-            desktop, use the table row menu.
-          </CardDescription>
+          <CardTitle>{tInv("inventoryTitle")}</CardTitle>
+          <CardDescription>{tInv("inventoryDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
           {products.length === 0 ? (
@@ -471,18 +473,16 @@ export default function AdminProductsPage() {
                   />
                 ))}
               </div>
-              <div className="hidden overflow-x-auto md:block">
-                <Table>
+              <div className="hidden md:block md:overflow-x-auto">
+                <Table className="w-full min-w-[720px] table-fixed">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-14"> </TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Slug</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead className="text-right">Price</TableHead>
-                  <TableHead className="text-right">Stock</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="min-w-[148px] text-right">Actions</TableHead>
+                  <TableHead className="w-[38%] min-w-0 ps-0">{tInv("colProduct")}</TableHead>
+                  <TableHead className="w-[22%] min-w-[11rem]">{tInv("colCategory")}</TableHead>
+                  <TableHead className="w-[12%] text-end whitespace-nowrap">{tInv("colPrice")}</TableHead>
+                  <TableHead className="w-[8%] text-end whitespace-nowrap">{tInv("colStock")}</TableHead>
+                  <TableHead className="w-[12%]">{tInv("colStatus")}</TableHead>
+                  <TableHead className="w-[8%] text-end pe-0">{tInv("colActions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -490,33 +490,54 @@ export default function AdminProductsPage() {
                   const thumb = p.images?.[0] ? resolveMediaSrc(p.images[0]) : "";
                   return (
                     <TableRow key={p.id}>
-                      <TableCell>
-                        <div className="relative size-10 overflow-hidden rounded-md border bg-muted">
-                          {thumb ? (
-                            <Image
-                              src={thumb}
-                              alt=""
-                              fill
-                              className="object-cover"
-                              sizes="40px"
-                              unoptimized
-                            />
-                          ) : null}
+                      <TableCell className="min-w-0 align-middle ps-0">
+                        <div className="flex min-w-0 gap-3">
+                          <div className="relative size-11 shrink-0 overflow-hidden rounded-lg border bg-muted">
+                            {thumb ? (
+                              <Image
+                                src={thumb}
+                                alt=""
+                                fill
+                                className="object-cover"
+                                sizes="44px"
+                                unoptimized
+                              />
+                            ) : null}
+                          </div>
+                          <div className="min-w-0 flex-1 py-0.5">
+                            <p
+                              className="line-clamp-2 text-sm font-semibold leading-snug text-foreground"
+                              title={p.name}
+                            >
+                              {p.name}
+                            </p>
+                            <p
+                              className="mt-0.5 truncate font-mono text-[11px] text-muted-foreground"
+                              title={p.slug}
+                            >
+                              {p.slug}
+                            </p>
+                          </div>
                         </div>
                       </TableCell>
-                      <TableCell className="font-medium">{p.name}</TableCell>
-                      <TableCell className="text-muted-foreground">{p.slug}</TableCell>
-                      <TableCell>{p.categorySlug ?? "—"}</TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {formatCurrency(parseMoney(p.price))}
+                      <TableCell className="align-middle">
+                        <ProductTableCategoryCell
+                          product={p}
+                          categories={categories}
+                          token={token}
+                          onSaved={load}
+                        />
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">{p.stock}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" title="No status field on API model yet">
-                          Active
-                        </Badge>
+                      <TableCell className="align-middle text-end">
+                        <ProductTablePriceCell product={p} token={token} onSaved={load} />
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="align-middle text-end">
+                        <ProductTableStockCell product={p} token={token} onSaved={load} />
+                      </TableCell>
+                      <TableCell className="align-middle">
+                        <ProductTableAvailabilityCell product={p} token={token} onSaved={load} />
+                      </TableCell>
+                      <TableCell className="align-middle text-end pe-0">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button

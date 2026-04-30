@@ -8,7 +8,19 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+from catalog.rbac import capabilities_for, get_staff_role
+
 User = get_user_model()
+
+
+def _login_user_payload(user) -> dict:
+    role = get_staff_role(user) or ""
+    return {
+        "id": user.pk,
+        "username": user.username,
+        "role": role,
+        "capabilities": sorted(capabilities_for(user)),
+    }
 
 
 class AdminTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -27,6 +39,7 @@ class AdminTokenObtainPairSerializer(TokenObtainPairSerializer):
                 {"detail": "Admin access only. Use a staff account (e.g. createsuperuser)."},
                 code="authorization",
             )
+        data["user"] = _login_user_payload(user)
         return data
 
 
@@ -37,10 +50,19 @@ class AdminTokenObtainPairView(TokenObtainPairView):
 class AdminProfileSerializer(serializers.ModelSerializer):
     """Staff profile for GET/PATCH (username is read-only)."""
 
+    role = serializers.SerializerMethodField()
+    capabilities = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ("username", "first_name", "last_name", "email")
-        read_only_fields = ("username",)
+        fields = ("id", "username", "first_name", "last_name", "email", "role", "capabilities")
+        read_only_fields = ("id", "username", "role", "capabilities")
+
+    def get_role(self, obj):
+        return get_staff_role(obj) or ""
+
+    def get_capabilities(self, obj):
+        return sorted(capabilities_for(obj))
 
 
 class AdminProfileView(APIView):

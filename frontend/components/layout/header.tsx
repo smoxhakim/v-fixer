@@ -23,6 +23,9 @@ import {
   rememberSearchKeyword,
   subscribeRecentSearchKeywords,
 } from "@/lib/recent-search-keywords";
+import { HOT_DEALS_PAGE_PATH } from "@/lib/hot-deals-constants";
+
+const STORE_MAP_URL = "https://maps.app.goo.gl/uzBi3A9kpstfvjSG8";
 
 export function Header() {
   const t = useTranslations("Header");
@@ -30,7 +33,7 @@ export function Header() {
   const pathname = usePathname();
   const locale = useLocale();
   const { itemCount } = useCart();
-  const { token } = useAdminToken();
+  const { token, hydrated } = useAdminToken();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [categories, setCategories] = useState<{ id: string; name: string; slug: string }[]>([]);
@@ -38,10 +41,8 @@ export function Header() {
 
   const navLinks = [
     { labelKey: "navHome" as const, href: "/" },
-    { labelKey: "navCollections" as const, href: "/category/smartphone" },
-    { labelKey: "navProducts" as const, href: "/category/computer" },
-    { labelKey: "navAudio" as const, href: "/category/audio" },
-    { labelKey: "navGaming" as const, href: "/category/game-console" },
+    { labelKey: "navCollections" as const, href: "/categories" },
+    { labelKey: "navProducts" as const, href: "/products" },
   ];
 
   useEffect(() => {
@@ -76,8 +77,7 @@ export function Header() {
     window.location.assign(`/${otherLocale}${suffix}${qs}`);
   };
 
-  const accountHref = token ? "/admin/dashboard/settings/profile" : "/admin/login";
-  const accountAria = token ? t("adminProfileAria") : t("accountAria");
+  const showAdminProfile = hydrated && Boolean(token);
 
   return (
     <header className="sticky top-0 z-50 bg-card border-b border-border">
@@ -89,15 +89,6 @@ export function Header() {
             <span className="text-2xl font-bold text-foreground">
               <span className="text-primary">V-</span>fixer
             </span>
-          </Link>
-
-          {/* Shop Now button */}
-          <Link
-            href="/category/smartphone"
-            className="hidden md:flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity shrink-0"
-          >
-            <ShoppingCart className="h-4 w-4" />
-            {t("shopNow")}
           </Link>
 
           {/* Search bar */}
@@ -164,13 +155,15 @@ export function Header() {
                 </span>
               )}
             </Link>
-            <Link
-              href={accountHref}
-              className="flex items-center justify-center w-10 h-10 shrink-0 rounded-full bg-secondary text-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
-              aria-label={accountAria}
-            >
-              <User className="h-5 w-5" />
-            </Link>
+            {showAdminProfile ? (
+              <Link
+                href="/admin/dashboard/settings/profile"
+                className="flex items-center justify-center w-10 h-10 shrink-0 rounded-full bg-secondary text-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
+                aria-label={t("adminProfileAria")}
+              >
+                <User className="h-5 w-5" />
+              </Link>
+            ) : null}
           </div>
         </div>
 
@@ -208,7 +201,7 @@ export function Header() {
           </div>
           <div className="flex items-center gap-5 text-xs text-muted-foreground">
             <Link
-              href="/category/smartphone"
+              href={HOT_DEALS_PAGE_PATH}
               className="flex items-center gap-1 hover:text-primary transition-colors"
             >
               <Flame className="h-3.5 w-3.5 text-red-500 shrink-0" />
@@ -221,13 +214,15 @@ export function Header() {
               <Truck className="h-3.5 w-3.5 shrink-0" />
               {t("trackOrder")}
             </Link>
-            <Link
-              href="#"
+            <a
+              href={STORE_MAP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center gap-1 hover:text-primary transition-colors"
             >
-              <MapPin className="h-3.5 w-3.5 shrink-0" />
+              <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
               {t("storeLocator")}
-            </Link>
+            </a>
           </div>
         </div>
       </nav>
@@ -271,14 +266,27 @@ export function Header() {
                   {t(link.labelKey)}
                 </Link>
               ))}
-              <Link
-                href={accountHref}
-                onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-2 border-t border-border py-3 text-sm font-medium text-foreground hover:text-primary"
-              >
-                <User className="h-4 w-4 shrink-0" aria-hidden />
-                {token ? t("adminProfile") : t("adminLogin")}
-              </Link>
+              {hydrated ? (
+                token ? (
+                  <Link
+                    href="/admin/dashboard/settings/profile"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-2 border-t border-border py-3 text-sm font-medium text-foreground hover:text-primary"
+                  >
+                    <User className="h-4 w-4 shrink-0" aria-hidden />
+                    {t("adminProfile")}
+                  </Link>
+                ) : (
+                  <Link
+                    href="/admin/login"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-2 border-t border-border py-3 text-sm font-medium text-foreground hover:text-primary"
+                  >
+                    <User className="h-4 w-4 shrink-0" aria-hidden />
+                    {t("adminLogin")}
+                  </Link>
+                )
+              ) : null}
               <div className="border-t border-border pt-2 mt-1">
                 <p className="text-xs text-muted-foreground mb-2">{t("categories")}</p>
                 <div className="flex flex-wrap gap-2">
