@@ -6,6 +6,9 @@ import { ProductGrid } from "@/components/product/product-grid";
 import { getHomeBestSelling, getHomeHero, getProducts } from "@/lib/api";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+/** Homepage featured grid uses up to 5 columns at `lg` (`ProductGrid`); cap = 5 rows × 5 products. */
+const FEATURED_HOME_PRODUCT_LIMIT = 5 * 5;
+
 export default async function Home({
   params,
 }: {
@@ -27,7 +30,10 @@ export default async function Home({
       <CategoryShowcaseSlider />
       <BestSellingSection items={bestSelling} />
       <div className="bg-secondary">
-        <ProductGrid title={t("featuredTitle")} products={featured} />
+        <ProductGrid
+          title={t("featuredTitle")}
+          products={featured.slice(0, FEATURED_HOME_PRODUCT_LIMIT)}
+        />
       </div>
     </>
   );

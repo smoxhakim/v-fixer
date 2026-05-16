@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getCategories, getProducts } from "@/lib/api";
 import { Link } from "@/i18n/navigation";
 import { ProductCard } from "@/components/product/product-card";
+import { RevealHeading } from "@/components/ui/reveal-heading";
 import type { Product } from "@/data/products";
 
 type StoreCategory = { id: string | number; name: string; slug: string };
@@ -84,9 +85,9 @@ export default async function AllProductsPage({
               >
                 <div className="mx-auto max-w-7xl px-4">
                   <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                    <h2 className="text-xl font-bold uppercase tracking-wider text-foreground">
+                    <RevealHeading className="text-xl font-bold uppercase tracking-wider text-foreground">
                       {cat.name}
-                    </h2>
+                    </RevealHeading>
                     <Link
                       href={`/category/${cat.slug}`}
                       className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
@@ -99,8 +100,8 @@ export default async function AllProductsPage({
                     <p className="text-sm text-muted-foreground">{t("sectionEmpty")}</p>
                   ) : (
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                      {products.map((product) => (
-                        <ProductCard key={product.id} product={product} />
+                      {products.map((product, i) => (
+                        <ProductCard key={product.id} product={product} index={i} />
                       ))}
                     </div>
                   )}
@@ -112,12 +113,12 @@ export default async function AllProductsPage({
           {uncategorized.length > 0 ? (
             <section id="category-other" className="scroll-mt-28 bg-muted/30 py-10">
               <div className="mx-auto max-w-7xl px-4">
-                <h2 className="mb-6 text-xl font-bold uppercase tracking-wider text-foreground">
+                <RevealHeading className="mb-6 text-xl font-bold uppercase tracking-wider text-foreground">
                   {t("other")}
-                </h2>
+                </RevealHeading>
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                  {uncategorized.map((product) => (
-                    <ProductCard key={product.id} product={product} />
+                  {uncategorized.map((product, i) => (
+                    <ProductCard key={product.id} product={product} index={i} />
                   ))}
                 </div>
               </div>

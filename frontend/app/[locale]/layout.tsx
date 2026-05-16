@@ -7,6 +7,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { CartProvider } from "@/context/cart-context";
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
+import { HeroUIProviderWithIntlRouter } from "@/components/heroui-provider-with-intl-router";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { routing } from "@/i18n/routing";
@@ -44,15 +45,17 @@ export default async function LocaleLayout({
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-        <CartProvider>
-          <div className="flex min-h-screen flex-col">
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
-        </CartProvider>
-        <Toaster position="top-right" richColors closeButton />
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <HeroUIProviderWithIntlRouter locale={locale}>
+          <CartProvider>
+            <div className="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden">
+              <Header />
+              <main className="w-full flex-1 overflow-x-hidden">{children}</main>
+              <Footer />
+            </div>
+          </CartProvider>
+          <Toaster position="top-right" richColors closeButton />
+        </HeroUIProviderWithIntlRouter>
       </ThemeProvider>
       <Analytics />
     </NextIntlClientProvider>
