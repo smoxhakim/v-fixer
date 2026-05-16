@@ -1,26 +1,52 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { Facebook, Instagram, Twitter, Youtube } from "lucide-react";
+
 import { getCategories } from "@/lib/api";
 import { FooterAdminAuth } from "@/components/layout/footer-admin-auth";
+import { NewsletterForm } from "@/components/layout/newsletter-form";
+
+const SOCIALS = [
+  { Icon: Facebook, href: "#", label: "Facebook" },
+  { Icon: Instagram, href: "#", label: "Instagram" },
+  { Icon: Twitter, href: "#", label: "Twitter" },
+  { Icon: Youtube, href: "#", label: "YouTube" },
+];
 
 export async function Footer() {
   const t = await getTranslations("Footer");
   const categories = await getCategories();
 
   return (
-    <footer className="bg-foreground text-background">
-      <div className="mx-auto max-w-7xl px-4 py-12">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
+    <footer className="bg-card border-t border-border text-foreground">
+      <div className="mx-auto max-w-7xl px-4 py-14">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div>
             <Link href="/" className="inline-block mb-4">
-              <span className="text-2xl font-bold">
-                <span className="text-primary">V-</span>fixer
+              <span className="text-2xl font-black tracking-tight">
+                <span className="text-warning">V-</span>fixer
               </span>
             </Link>
-            <p className="text-sm opacity-70 leading-relaxed">{t("tagline")}</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {t("tagline")}
+            </p>
+
+            <div className="mt-6 flex items-center gap-2">
+              {SOCIALS.map(({ Icon, href, label }) => (
+                <a
+                  key={label}
+                  href={href}
+                  aria-label={label}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-colors hover:border-warning hover:text-warning"
+                >
+                  <Icon className="h-4 w-4" />
+                </a>
+              ))}
+            </div>
+
             <div className="mt-6">
-              <h3 className="text-xs font-semibold uppercase tracking-wider opacity-90 mb-2">
+              <h3 className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground mb-2">
                 {t("adminHeading")}
               </h3>
               <FooterAdminAuth />
@@ -29,7 +55,7 @@ export async function Footer() {
 
           {/* Categories */}
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider mb-4">
+            <h3 className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground mb-4">
               {t("categories")}
             </h3>
             <ul className="flex flex-col gap-2">
@@ -37,7 +63,7 @@ export async function Footer() {
                 <li key={cat.id}>
                   <Link
                     href={`/category/${cat.slug}`}
-                    className="text-sm opacity-70 hover:opacity-100 transition-opacity"
+                    className="text-sm text-foreground/80 hover:text-warning transition-colors"
                   >
                     {cat.name}
                   </Link>
@@ -48,51 +74,47 @@ export async function Footer() {
 
           {/* Information */}
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider mb-4">
+            <h3 className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground mb-4">
               {t("information")}
             </h3>
-            <ul className="flex flex-col gap-2 text-sm opacity-70">
-              <li>
-                <span className="hover:opacity-100 cursor-pointer transition-opacity">{t("about")}</span>
+            <ul className="flex flex-col gap-2 text-sm text-foreground/80">
+              <li className="cursor-pointer hover:text-warning transition-colors">
+                {t("about")}
               </li>
-              <li>
-                <span className="hover:opacity-100 cursor-pointer transition-opacity">{t("contact")}</span>
+              <li className="cursor-pointer hover:text-warning transition-colors">
+                {t("contact")}
               </li>
-              <li>
-                <span className="hover:opacity-100 cursor-pointer transition-opacity">{t("terms")}</span>
+              <li className="cursor-pointer hover:text-warning transition-colors">
+                {t("terms")}
               </li>
-              <li>
-                <span className="hover:opacity-100 cursor-pointer transition-opacity">{t("returns")}</span>
+              <li className="cursor-pointer hover:text-warning transition-colors">
+                {t("returns")}
               </li>
-              <li>
-                <span className="hover:opacity-100 cursor-pointer transition-opacity">{t("shipping")}</span>
+              <li className="cursor-pointer hover:text-warning transition-colors">
+                {t("shipping")}
               </li>
-              <li>
-                <span className="hover:opacity-100 cursor-pointer transition-opacity">{t("privacy")}</span>
+              <li className="cursor-pointer hover:text-warning transition-colors">
+                {t("privacy")}
               </li>
             </ul>
           </div>
 
           {/* Newsletter */}
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider mb-4">
+            <h3 className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground mb-4">
               {t("newsletter")}
             </h3>
-            <p className="text-sm opacity-70 mb-4 leading-relaxed">{t("newsletterHint")}</p>
-            <div className="flex">
-              <input
-                type="email"
-                placeholder={t("emailPlaceholder")}
-                className="flex-1 rounded-s-lg bg-background/10 border border-background/20 px-3 py-2 text-sm text-background placeholder:text-background/50 focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-              <button className="rounded-e-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity">
-                {t("subscribe")}
-              </button>
-            </div>
+            <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+              {t("newsletterHint")}
+            </p>
+            <NewsletterForm
+              placeholder={t("emailPlaceholder")}
+              cta={t("subscribe")}
+            />
           </div>
         </div>
 
-        <div className="mt-10 border-t border-background/10 pt-6 text-center text-xs opacity-50">
+        <div className="mt-12 border-t border-border pt-6 text-center text-xs text-muted-foreground">
           <p>{t("copyright")}</p>
         </div>
       </div>

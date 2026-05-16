@@ -1,6 +1,5 @@
 import { Truck, ShieldCheck, RefreshCw, Headset } from "lucide-react";
 import { getTranslations } from "next-intl/server";
-
 import { formatCurrency } from "@/lib/format";
 
 export async function TrustBadges() {
@@ -9,25 +8,25 @@ export async function TrustBadges() {
 
   const badges = [
     {
-      icon: <Truck className="h-8 w-8" />,
+      Icon: Truck,
       titleKey: "deliveryTitle" as const,
       descKey: "deliveryDesc" as const,
       descParams: { amount },
     },
     {
-      icon: <ShieldCheck className="h-8 w-8" />,
+      Icon: ShieldCheck,
       titleKey: "secureTitle" as const,
       descKey: "secureDesc" as const,
       descParams: undefined as Record<string, string> | undefined,
     },
     {
-      icon: <RefreshCw className="h-8 w-8" />,
+      Icon: RefreshCw,
       titleKey: "warrantyTitle" as const,
       descKey: "warrantyDesc" as const,
       descParams: undefined,
     },
     {
-      icon: <Headset className="h-8 w-8" />,
+      Icon: Headset,
       titleKey: "supportTitle" as const,
       descKey: "supportDesc" as const,
       descParams: undefined,
@@ -35,23 +34,25 @@ export async function TrustBadges() {
   ];
 
   return (
-    <section className="bg-card py-6 border-y border-border md:py-10">
-      <div className="mx-auto max-w-7xl px-4">
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
-          {badges.map((badge) => (
+    <section className="w-full overflow-hidden bg-background py-8 md:py-12">
+      <div className="mx-auto w-full max-w-7xl px-4">
+        <div className="grid w-full grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
+          {badges.map(({ Icon, titleKey, descKey, descParams }) => (
             <div
-              key={badge.titleKey}
-              className="flex flex-col items-center text-center"
+              key={titleKey}
+              className="flex w-full flex-row items-center gap-3 rounded-xl border border-border bg-card p-4 md:p-5 hover:border-warning/60 transition-colors"
             >
-              <div className="mb-2 text-primary md:mb-3">{badge.icon}</div>
-              <h3 className="text-[10px] font-bold uppercase leading-tight tracking-wider text-foreground sm:text-xs">
-                {t(badge.titleKey)}
-              </h3>
-              <p className="mt-1 hidden text-xs text-muted-foreground leading-relaxed md:block">
-                {badge.descParams
-                  ? t(badge.descKey, badge.descParams)
-                  : t(badge.descKey)}
-              </p>
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-warning/10 text-warning">
+                <Icon className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-foreground sm:text-xs">
+                  {t(titleKey)}
+                </h3>
+                <p className="mt-0.5 hidden text-xs text-muted-foreground leading-relaxed md:block">
+                  {descParams ? t(descKey, descParams) : t(descKey)}
+                </p>
+              </div>
             </div>
           ))}
         </div>

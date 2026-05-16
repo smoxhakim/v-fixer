@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button, Chip } from "@heroui/react";
 
 import type { HomeHeroSlidePayload } from "@/lib/home-hero";
 import { resolveMediaSrc } from "@/lib/media-url";
@@ -15,65 +17,58 @@ type VisualSlide = {
   description: string;
   image: string;
   href: string;
-  bg: string;
 };
 
 const DEFAULT_MAIN: HomeHeroSlidePayload[] = [
   {
-    tag: "GAMING GEAR",
-    title: "GAME CONTROLLER",
-    description: "Controller type: Wireless controller",
+    tag: "PRO TOOLS",
+    title: "MICROSCOPES STÉRÉO",
+    description: "Précision optique pour réparations micro-soudure",
     imageUrl:
-      "https://images.unsplash.com/photo-1592840496694-26d035b52b48?w=1200&h=720&fit=crop",
-    linkHref: "/category/game-console",
-    gradientClass: "from-[#050a14] via-[#0c1a32] to-[#142e52]",
+      "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=1400&h=800&fit=crop",
+    linkHref: "/category/microscopes",
+    gradientClass: "from-black via-neutral-900 to-neutral-950",
   },
   {
-    tag: "NEW ARRIVALS",
-    title: "MACBOOK PRO M3",
-    description: "The most powerful laptop ever made",
+    tag: "NOUVEAUTÉ",
+    title: "CAMÉRAS THERMIQUES",
+    description: "Détectez chaque court-circuit en quelques secondes",
     imageUrl:
-      "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=1200&h=720&fit=crop",
-    linkHref: "/category/computer",
-    gradientClass: "from-[#0d0d12] via-[#151528] to-[#1e1e3a]",
+      "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1400&h=800&fit=crop",
+    linkHref: "/category/thermal-camera",
+    gradientClass: "from-black via-neutral-900 to-neutral-950",
   },
   {
     tag: "HOT DEALS",
-    title: "AIRPODS PRO 2",
-    description: "Adaptive Audio. Personalized Spatial Audio.",
+    title: "STATIONS À SOUDER",
+    description: "L'atelier des pros, en promotion ce mois-ci",
     imageUrl:
-      "https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=1200&h=720&fit=crop",
-    linkHref: "/category/audio",
-    gradientClass: "from-[#061018] via-[#0f2430] to-[#1a3545]",
+      "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=1400&h=800&fit=crop",
+    linkHref: "/products",
+    gradientClass: "from-black via-neutral-900 to-neutral-950",
   },
 ];
 
 const DEFAULT_SIDE: HomeHeroSlidePayload[] = [
   {
-    tag: "NEW ARRIVALS",
-    title: "BAMBOOBUDS",
+    tag: "NOUVEAUTÉ",
+    title: "OUTILS DE PRÉCISION",
     description: "",
     imageUrl:
-      "https://images.unsplash.com/photo-1590658268037-6bf12f032f55?w=800&h=640&fit=crop",
-    linkHref: "/category/audio",
-    gradientClass: "from-violet-600 to-purple-900",
+      "https://images.unsplash.com/photo-1530124566582-a618bc2615dc?w=900&h=720&fit=crop",
+    linkHref: "/products",
+    gradientClass: "from-black to-neutral-900",
   },
   {
-    tag: "NEW ARRIVALS",
-    title: "HOMEPOD PRO",
+    tag: "ATELIER",
+    title: "ALIMENTATIONS LAB",
     description: "",
     imageUrl:
-      "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=800&h=640&fit=crop",
-    linkHref: "/category/audio",
-    gradientClass: "from-zinc-900 to-black",
+      "https://images.unsplash.com/photo-1581090700227-1e37b190418e?w=900&h=720&fit=crop",
+    linkHref: "/products",
+    gradientClass: "from-black to-neutral-900",
   },
 ];
-
-/** Side promo shell: vivid purple slot vs dark slot (reference layout). */
-const SIDE_SHELL = [
-  "bg-gradient-to-br from-violet-600 via-purple-700 to-indigo-950",
-  "bg-gradient-to-br from-zinc-950 via-neutral-950 to-black",
-] as const;
 
 function toVisual(s: HomeHeroSlidePayload): VisualSlide {
   const img = s.imageUrl.trim();
@@ -83,7 +78,6 @@ function toVisual(s: HomeHeroSlidePayload): VisualSlide {
     description: s.description,
     image: img ? resolveMediaSrc(img) : "",
     href: s.linkHref || "/",
-    bg: s.gradientClass.trim() || "from-muted to-muted",
   };
 }
 
@@ -95,6 +89,8 @@ export function HeroSection({
   sidePromos?: HomeHeroSlidePayload[] | null;
 }) {
   const t = useTranslations("Hero");
+  const router = useRouter();
+
   const slides = useMemo(() => {
     const src = mainProp?.length ? mainProp : DEFAULT_MAIN;
     return src.map(toVisual);
@@ -116,174 +112,174 @@ export function HeroSection({
   }, [slides.length]);
 
   const prev = useCallback(() => {
-    setCurrent((c) => (slides.length ? (c - 1 + slides.length) % slides.length : 0));
+    setCurrent((c) =>
+      slides.length ? (c - 1 + slides.length) % slides.length : 0,
+    );
   }, [slides.length]);
 
   useEffect(() => {
     if (!slides.length) return;
-    const interval = setInterval(next, 6000);
-    return () => clearInterval(interval);
+    const id = window.setInterval(next, 6500);
+    return () => window.clearInterval(id);
   }, [next, slides.length]);
 
-  if (!slides.length) {
-    return null;
-  }
+  if (!slides.length) return null;
+
+  const active = slides[current];
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-4 md:py-6">
-      <div className="grid grid-cols-1 items-stretch gap-4 md:gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        {/* Main carousel — ~2/3 width */}
-        <div className="relative isolate min-h-[280px] overflow-hidden rounded-2xl shadow-xl ring-1 ring-black/10 md:min-h-[320px] lg:min-h-[400px]">
-          <div className="relative h-full min-h-[inherit] overflow-hidden">
-            {slides.map((slide, i) => (
-              <Link
-                key={`${slide.href}-${i}`}
-                href={slide.href}
-                className={`absolute inset-0 overflow-hidden transition-opacity duration-700 ease-out ${
-                  i === current ? "z-[2] opacity-100" : "z-0 opacity-0 pointer-events-none"
-                }`}
+    <section className="mx-auto w-full max-w-7xl overflow-hidden px-4 py-4 md:py-6">
+      <div className="grid w-full grid-cols-1 items-stretch gap-4 md:gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        {/* Main hero */}
+        <div className="relative isolate w-full min-h-[300px] md:min-h-[360px] lg:min-h-[440px] bg-neutral-950 border border-border rounded-2xl overflow-hidden shadow-xl">
+          <div className="relative h-full">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={active.href + current}
+                initial={{ opacity: 0, scale: 1.03 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                className="absolute inset-0"
               >
-                {/* Dark base so no CMS gradient shows as a strip if the photo letterboxes */}
-                <div className="absolute inset-0 bg-neutral-950" aria-hidden />
-                {slide.image ? (
-                  <div className="absolute inset-0 overflow-hidden">
-                    <Image
-                      src={slide.image}
-                      alt={slide.title}
-                      fill
-                      className="object-cover object-center scale-[1.02]"
-                      priority={i === 0}
-                      sizes="(max-width: 1024px) 100vw, 67vw"
-                    />
-                  </div>
-                ) : (
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-br ${slide.bg}`}
-                    aria-hidden
+                {active.image ? (
+                  <Image
+                    src={active.image}
+                    alt={active.title}
+                    fill
+                    priority
+                    className="object-cover object-center"
+                    sizes="(max-width: 1024px) 100vw, 67vw"
                   />
-                )}
-                {/* Readability: keep right edge slightly darkened so no bright/blue seam */}
+                ) : null}
                 <div
-                  className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/45 to-black/35 md:via-black/35 md:to-black/40"
                   aria-hidden
+                  className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/30"
                 />
-                <div className="relative z-10 flex h-full min-h-0 min-w-0 flex-col justify-center px-6 pb-24 pt-8 md:px-10 md:pb-28 lg:max-w-[min(100%,34rem)]">
-                  <div className="min-h-0 min-w-0 shrink">
-                    <span className="inline-block text-[11px] font-semibold uppercase tracking-[0.2em] text-white/75">
-                      {slide.tag}
-                    </span>
-                    <h2
-                      title={slide.title}
-                      className="mt-2 max-w-full text-balance break-words text-xl font-extrabold uppercase leading-[1.12] tracking-tight text-white drop-shadow-md line-clamp-4 sm:text-2xl md:line-clamp-5 md:text-3xl lg:text-3xl xl:text-4xl"
-                    >
-                      {slide.title}
-                    </h2>
-                    {slide.description ? (
-                      <p className="mt-2 line-clamp-2 text-sm leading-snug text-white/80 md:text-base">
-                        {slide.description}
-                      </p>
-                    ) : null}
-                  </div>
-                  <span className="mt-5 inline-flex w-fit shrink-0 items-center justify-center rounded-md bg-white px-6 py-2.5 text-xs font-bold uppercase tracking-widest text-neutral-950 shadow-lg transition hover:bg-white/90 md:mt-6 md:px-7 md:py-3">
-                    {t("shopNow")}
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
+                <div
+                  aria-hidden
+                  className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/70 to-transparent"
+                />
+              </motion.div>
+            </AnimatePresence>
 
-          {/* Pill carousel control */}
-          <div className="pointer-events-none absolute inset-x-0 bottom-5 z-20 flex justify-center px-4">
-            <div className="pointer-events-auto inline-flex items-center gap-1 rounded-full border border-neutral-200/80 bg-white/95 px-1.5 py-1.5 shadow-lg backdrop-blur-sm">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  prev();
-                }}
-                className="flex size-8 items-center justify-center rounded-full text-neutral-700 transition-colors hover:bg-neutral-100"
-                aria-label={t("prevSlide")}
+            <div className="relative z-10 flex h-full min-h-[inherit] flex-col justify-center px-6 pb-24 pt-8 md:px-12 md:pb-28 lg:max-w-[36rem]">
+              <Chip
+                color="warning"
+                variant="flat"
+                size="sm"
+                className="w-fit font-bold uppercase tracking-[0.2em] text-warning bg-warning/15 rounded-md"
               >
-                <ChevronLeft className="size-5" strokeWidth={2} />
-              </button>
-              <div className="flex items-center gap-1.5 px-1">
-                {slides.map((_, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setCurrent(i);
-                    }}
-                    className={`rounded-full transition-all ${
-                      i === current
-                        ? "h-2 w-6 bg-neutral-800"
-                        : "h-2 w-2 bg-neutral-300 hover:bg-neutral-400"
-                    }`}
-                    aria-label={t("goToSlide", { n: i + 1 })}
-                  />
-                ))}
+                {active.tag}
+              </Chip>
+              <h2
+                title={active.title}
+                className="mt-4 font-black uppercase tracking-tight text-white drop-shadow-md leading-[1.05] text-3xl sm:text-4xl md:text-5xl lg:text-6xl line-clamp-3"
+              >
+                {active.title}
+              </h2>
+              {active.description ? (
+                <p className="mt-3 max-w-md text-sm md:text-base text-white/85 leading-relaxed">
+                  {active.description}
+                </p>
+              ) : null}
+              <Button
+                size="lg"
+                onPress={() => router.push(active.href)}
+                className="mt-7 w-fit rounded-full bg-warning text-warning-foreground font-bold uppercase tracking-wider px-6 py-3 hover:opacity-90 inline-flex items-center gap-2"
+              >
+                {t("shopNow")}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Slide controls */}
+            <div className="pointer-events-none absolute inset-x-0 bottom-5 z-20 flex justify-center px-4">
+              <div className="pointer-events-auto inline-flex items-center gap-1 rounded-full border border-white/15 bg-black/65 px-1.5 py-1.5 shadow-lg backdrop-blur-md">
+                <button
+                  type="button"
+                  onClick={prev}
+                  className="flex size-8 items-center justify-center rounded-full text-white/85 transition-colors hover:bg-white/10"
+                  aria-label={t("prevSlide")}
+                >
+                  <ChevronLeft className="size-5" strokeWidth={2} />
+                </button>
+                <div className="flex items-center gap-1.5 px-1">
+                  {slides.map((_, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setCurrent(i)}
+                      className={`rounded-full transition-all ${
+                        i === current
+                          ? "h-2 w-6 bg-warning"
+                          : "h-2 w-2 bg-white/40 hover:bg-white/60"
+                      }`}
+                      aria-label={t("goToSlide", { n: i + 1 })}
+                    />
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={next}
+                  className="flex size-8 items-center justify-center rounded-full text-white/85 transition-colors hover:bg-white/10"
+                  aria-label={t("nextSlide")}
+                >
+                  <ChevronRight className="size-5" strokeWidth={2} />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  next();
-                }}
-                className="flex size-8 items-center justify-center rounded-full text-neutral-700 transition-colors hover:bg-neutral-100"
-                aria-label={t("nextSlide")}
-              >
-                <ChevronRight className="size-5" strokeWidth={2} />
-              </button>
             </div>
           </div>
         </div>
 
-        {/* Side promos — stacked ~1/3 */}
-        <div className="flex min-h-[280px] flex-col gap-4 md:min-h-[320px] lg:min-h-0 lg:gap-5">
+        {/* Side promos */}
+        <div className="flex min-h-[300px] flex-col gap-4 md:min-h-[360px] lg:min-h-0 lg:gap-5">
           {promos.map((promo, i) => (
-            <Link
+            <div
               key={`${promo.href}-${i}`}
-              href={promo.href}
-              className={`relative flex flex-1 basis-0 flex-col justify-center overflow-hidden rounded-2xl shadow-lg ring-1 ring-black/10 ${SIDE_SHELL[i % SIDE_SHELL.length]}`}
+              className="relative w-full flex-1 basis-0 min-h-[160px] overflow-hidden bg-neutral-950 border border-border rounded-2xl shadow-md group"
             >
+              <Link
+                href={promo.href}
+                aria-label={promo.title}
+                className="absolute inset-0 z-20"
+              />
               {promo.image ? (
-                <div className="absolute inset-0 overflow-hidden bg-neutral-950">
-                  <Image
-                    src={promo.image}
-                    alt={promo.title}
-                    fill
-                    className="object-cover object-center transition duration-500 hover:scale-105"
-                    sizes="(max-width: 1024px) 100vw, 34vw"
-                  />
-                </div>
+                <Image
+                  src={promo.image}
+                  alt={promo.title}
+                  fill
+                  className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                  sizes="(max-width: 1024px) 100vw, 34vw"
+                />
               ) : null}
               <div
-                className={`absolute inset-0 ${
-                  i % 2 === 0
-                    ? "bg-gradient-to-r from-violet-900/85 via-purple-800/40 to-transparent"
-                    : "bg-gradient-to-r from-black/85 via-neutral-900/50 to-transparent"
-                }`}
                 aria-hidden
+                className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/20"
               />
-              <div className="relative z-10 flex h-full min-h-[160px] min-w-0 flex-col justify-between gap-3 p-5 md:p-6 lg:max-w-[min(100%,85%)]">
-                <div className="min-h-0 min-w-0 shrink pt-0.5">
-                  <span className="inline-block text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-400">
+              <div className="relative z-10 flex h-full min-h-[160px] flex-col justify-between gap-3 p-5 md:p-6">
+                <div>
+                  <Chip
+                    color="warning"
+                    variant="flat"
+                    size="sm"
+                    className="font-bold uppercase tracking-[0.18em] text-warning bg-warning/15 rounded-md"
+                  >
                     {promo.tag}
-                  </span>
+                  </Chip>
                   <h3
                     title={promo.title}
-                    className="mt-2 max-w-full break-words text-base font-bold uppercase leading-snug tracking-tight text-white drop-shadow-md line-clamp-3 sm:text-lg md:line-clamp-4 md:text-xl"
+                    className="mt-3 break-words font-black uppercase leading-tight tracking-tight text-white drop-shadow-md line-clamp-3 text-lg md:text-xl"
                   >
                     {promo.title}
                   </h3>
                 </div>
-                <span className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-white/95 transition hover:gap-2">
+                <span className="inline-flex items-center gap-1.5 text-sm font-bold uppercase tracking-wider text-warning transition group-hover:gap-2">
                   {t("shopNowSide")}
-                  <ArrowRight className="size-4 shrink-0 opacity-90" aria-hidden />
+                  <ArrowRight className="size-4 shrink-0" aria-hidden />
                 </span>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       </div>

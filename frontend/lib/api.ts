@@ -128,11 +128,27 @@ export function isAdminSessionExpiredErrorMessage(message: string): boolean {
   return /session expired|sign in again at \/admin\/login/i.test(message);
 }
 
+/**
+ * During `next build`, workers set `NEXT_PHASE=phase-production-build`. Hitting a
+ * local API then logs `TypeError: fetch failed` / `ECONNREFUSED` even when the
+ * caller catches — so we skip the network call unless explicitly allowed (e.g. CI
+ * with `ALLOW_API_DURING_BUILD=1` and a reachable API).
+ */
+function shouldDeferApiFetchDuringBuild(): boolean {
+  return (
+    process.env.NEXT_PHASE === "phase-production-build" &&
+    process.env.ALLOW_API_DURING_BUILD !== "1"
+  );
+}
+
 /** Avoids throwing when the Django server is not running (ECONNREFUSED). */
 export async function apiFetch(
   url: string,
   init?: RequestInit,
 ): Promise<Response | null> {
+  if (shouldDeferApiFetchDuringBuild()) {
+    return null;
+  }
   try {
     return await fetch(url, init);
   } catch {
