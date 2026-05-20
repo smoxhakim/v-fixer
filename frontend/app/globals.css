@@ -81,7 +81,7 @@
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
 
-  /* Radius and font tokens — NOT yet rewired to DESIGN.md. Next M1 step. */
+  /* Radius token — NOT yet rewired to DESIGN.md. Future M1 step. */
   --radius: 0.625rem;
 
   /* Sidebar palette (admin) — kept; later M1 step decides whether to align */
@@ -169,8 +169,18 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-inter), 'Inter', system-ui, sans-serif;
-  --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+  /* ----------------------------------------------------------------------
+     Typography aliases — canonical names consumed by components.
+     next/font sets --font-fraunces / --font-geist / --font-ibm-plex-arabic /
+     --font-jetbrains-mono on <body> (see app/layout.tsx). These four lines
+     give them the names DESIGN.md uses everywhere.
+     ---------------------------------------------------------------------- */
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-body:    var(--font-geist), -apple-system, system-ui, sans-serif;
+  --font-arabic:  var(--font-ibm-plex-arabic), system-ui, sans-serif;
+  --font-mono:    var(--font-jetbrains-mono), ui-monospace, monospace;
+  /* Tailwind's --font-sans utility still resolves to body (Geist). */
+  --font-sans:    var(--font-body);
 
   /* Shadcn-named Tailwind utilities (bg-card, text-foreground, …) — admin */
   --color-background: var(--background);
@@ -239,6 +249,22 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Canonical font aliases live HERE (on body, not :root) because next/font
+       sets --font-fraunces / --font-geist / --font-ibm-plex-arabic /
+       --font-jetbrains-mono via classNames on this same element. Declaring
+       the aliases at :root would compute them BEFORE the source vars exist
+       in scope, and the inherited value would be empty. Declared on body,
+       the var() resolves correctly and inherits to all descendants. */
+    --font-display: var(--font-fraunces), Georgia, serif;
+    --font-body:    var(--font-geist), -apple-system, system-ui, sans-serif;
+    --font-arabic:  var(--font-ibm-plex-arabic), system-ui, sans-serif;
+    --font-mono:    var(--font-jetbrains-mono), ui-monospace, monospace;
+    font-family: var(--font-body);
+    font-feature-settings: "tnum" on, "ss01" on;
+  }
+  /* Locale-aware body font: Arabic body uses IBM Plex Sans Arabic. */
+  [dir="rtl"] body {
+    font-family: var(--font-arabic);
   }
 }
 

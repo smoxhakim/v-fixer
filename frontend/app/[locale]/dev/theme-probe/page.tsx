@@ -594,6 +594,281 @@ export default function ThemeProbe() {
             </div>
           </section>
 
+          {/* Type specimens — verify next/font wired the four families */}
+          <section style={{ marginBottom: 40 }}>
+            <h2
+              style={{
+                fontSize: 11,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: "var(--vfx-muted)",
+                marginBottom: 12,
+              }}
+            >
+              06 · Type specimens (next/font wired)
+            </h2>
+
+            {/* Fraunces — display only, large */}
+            <div
+              style={{
+                borderTop: "1px solid var(--vfx-rule)",
+                padding: "20px 0",
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 10,
+                  letterSpacing: "0.05em",
+                  textTransform: "uppercase",
+                  color: "var(--vfx-muted)",
+                  marginBottom: 10,
+                  display: "flex",
+                  gap: 12,
+                }}
+              >
+                <span>Fraunces · display</span>
+                <span style={{ color: "var(--vfx-accent)" }}>
+                  variable + opsz + SOFT
+                </span>
+              </div>
+              <div
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: 48,
+                  fontWeight: 500,
+                  lineHeight: 1.08,
+                  letterSpacing: "-0.02em",
+                  fontVariationSettings: '"opsz" 48, "SOFT" 30',
+                  color: "var(--vfx-ink)",
+                }}
+              >
+                Aifen A902 Pro — deux fers.
+              </div>
+              <div
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: 22,
+                  fontWeight: 500,
+                  lineHeight: 1.2,
+                  letterSpacing: "-0.01em",
+                  fontVariationSettings: '"opsz" 22, "SOFT" 30',
+                  color: "var(--vfx-ink)",
+                  marginTop: 10,
+                }}
+              >
+                Récemment ajoutés · De nouveau disponibles
+              </div>
+            </div>
+
+            {/* Geist — body Latin */}
+            <div
+              style={{
+                borderTop: "1px solid var(--vfx-rule)",
+                padding: "20px 0",
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 10,
+                  letterSpacing: "0.05em",
+                  textTransform: "uppercase",
+                  color: "var(--vfx-muted)",
+                  marginBottom: 10,
+                  display: "flex",
+                  gap: 12,
+                }}
+              >
+                <span>Geist · body Latin</span>
+                <span style={{ color: "var(--vfx-accent)" }}>
+                  variable · 15px · tnum + ss01
+                </span>
+              </div>
+              <p
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: 15,
+                  fontWeight: 400,
+                  lineHeight: 1.65,
+                  color: "var(--vfx-ink)",
+                  maxWidth: "64ch",
+                  fontFeatureSettings: '"tnum" on, "ss01" on',
+                }}
+              >
+                Station de soudage Aifen A902 Pro avec deux fers indépendants
+                et neuf pannes Magma incluses. Compatible séries C115, C210,
+                C245. Stock vérifié à l'instant à Casablanca, livraison sous
+                48 heures, garantie 12 mois avec SAV local.
+              </p>
+              <p
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: 15,
+                  fontWeight: 500,
+                  lineHeight: 1.55,
+                  color: "var(--vfx-ink)",
+                  maxWidth: "64ch",
+                  fontFeatureSettings: '"tnum" on, "ss01" on',
+                  marginTop: 8,
+                }}
+              >
+                Medium weight 500 — used for product card titles, section
+                heads, and active states. 0123456789 (tabular alignment check).
+              </p>
+            </div>
+
+            {/* IBM Plex Sans Arabic — body Arabic */}
+            <div
+              style={{
+                borderTop: "1px solid var(--vfx-rule)",
+                padding: "20px 0",
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 10,
+                  letterSpacing: "0.05em",
+                  textTransform: "uppercase",
+                  color: "var(--vfx-muted)",
+                  marginBottom: 10,
+                  display: "flex",
+                  gap: 12,
+                }}
+              >
+                <span>IBM Plex Sans Arabic · body Arabic</span>
+                <span style={{ color: "var(--vfx-accent)" }}>
+                  static · 400/500/600 · 15px · RTL
+                </span>
+              </div>
+              <p
+                lang="ar"
+                dir="rtl"
+                style={{
+                  fontFamily: "var(--font-arabic)",
+                  fontSize: 15,
+                  fontWeight: 400,
+                  lineHeight: 1.85,
+                  color: "var(--vfx-ink)",
+                  maxWidth: "64ch",
+                  direction: "rtl",
+                  textAlign: "right",
+                }}
+              >
+                محطة لحام أيفن A902 برو بمكويين مستقلين، تسع بكرات ماجما
+                متضمنة. متوافقة مع سلاسل C115 وC210 وC245. مخزون متاح في الدار
+                البيضاء، التوصيل خلال ٤٨ ساعة، ضمان ١٢ شهرًا مع خدمة ما بعد
+                البيع محلية.
+              </p>
+              <p
+                lang="ar"
+                dir="rtl"
+                style={{
+                  fontFamily: "var(--font-arabic)",
+                  fontSize: 15,
+                  fontWeight: 500,
+                  lineHeight: 1.75,
+                  color: "var(--vfx-ink)",
+                  maxWidth: "64ch",
+                  direction: "rtl",
+                  textAlign: "right",
+                  marginTop: 8,
+                }}
+              >
+                Medium 500 (RTL): عناوين البطاقات والأقسام النشطة.
+                الأرقام: ٠١٢٣٤٥٦٧٨٩ — ٣٬٨٠٠٫٠٠ درهم.
+              </p>
+            </div>
+
+            {/* JetBrains Mono — prices + SKUs */}
+            <div
+              style={{
+                borderTop: "1px solid var(--vfx-rule)",
+                borderBottom: "1px solid var(--vfx-rule)",
+                padding: "20px 0",
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 10,
+                  letterSpacing: "0.05em",
+                  textTransform: "uppercase",
+                  color: "var(--vfx-muted)",
+                  marginBottom: 10,
+                  display: "flex",
+                  gap: 12,
+                }}
+              >
+                <span>JetBrains Mono · numbers + identifiers</span>
+                <span style={{ color: "var(--vfx-accent)" }}>
+                  variable · tabular by default
+                </span>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: 36,
+                    fontWeight: 500,
+                    color: "var(--vfx-accent)",
+                    fontFeatureSettings: '"tnum" on',
+                    lineHeight: 1,
+                  }}
+                >
+                  3 800,00{" "}
+                  <span
+                    style={{
+                      fontSize: 14,
+                      color: "var(--vfx-muted)",
+                      fontWeight: 400,
+                    }}
+                  >
+                    MAD
+                  </span>{" "}
+                  <span
+                    style={{
+                      fontSize: 14,
+                      color: "var(--vfx-muted)",
+                      textDecoration: "line-through",
+                      fontWeight: 400,
+                    }}
+                  >
+                    4 200,00
+                  </span>
+                </div>
+                <div
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: "var(--vfx-ink)",
+                    letterSpacing: "0.05em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  REF · AIFEN-A902PRO · QT 03 · CAT STATIONS
+                </div>
+                <div
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: 11,
+                    color: "var(--vfx-muted)",
+                    fontFeatureSettings: '"tnum" on',
+                  }}>
+                  Tabular check · 1 111,11 · 2 222,22 · 3 333,33 · 4 444,44
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* Findings note */}
           <section
             style={{
