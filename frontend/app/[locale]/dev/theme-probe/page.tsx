@@ -24,9 +24,11 @@ import {
   Input,
   Switch,
 } from "@heroui/react";
+import { usePretextHeights } from "@/lib/pretext";
 
 export default function ThemeProbe() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  usePretextHeights();
 
   useEffect(() => {
     const root = document.documentElement;
@@ -866,6 +868,200 @@ export default function ThemeProbe() {
                   Tabular check · 1 111,11 · 2 222,22 · 3 333,33 · 4 444,44
                 </div>
               </div>
+            </div>
+          </section>
+
+          {/* Pretext at work — uniform card-title heights */}
+          <section style={{ marginBottom: 40 }}>
+            <h2
+              style={{
+                fontSize: 11,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: "var(--vfx-muted)",
+                marginBottom: 12,
+              }}
+            >
+              07 · Pretext at work (resize the window, click titles to edit)
+            </h2>
+            <p
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: 11,
+                letterSpacing: "0.04em",
+                color: "var(--vfx-muted)",
+                marginBottom: 14,
+                lineHeight: 1.55,
+              }}
+            >
+              Four product cards, titles of deliberately uneven length, all
+              tagged{" "}
+              <code
+                style={{
+                  background: "var(--vfx-surface-2)",
+                  padding: "1px 5px",
+                  borderRadius: 2,
+                }}
+              >
+                data-pretext-group=&quot;s7-card&quot;
+              </code>
+              . Without Pretext, the four cards stagger by ~22px on desktop.
+              With Pretext, every title slot snaps to the max-line-count
+              height in the group. Resize the viewport — heights recompute
+              live. Titles are contenteditable; click and edit one and watch
+              the group reflow.
+            </p>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4, 1fr)",
+                gap: 16,
+              }}
+            >
+              {[
+                {
+                  ref: "AIFEN-A902PRO",
+                  title:
+                    "Station de soudage Aifen A902 Pro avec deux fers et neuf pannes Magma incluses",
+                  price: "3 800,00",
+                  stock: "3 en stock",
+                },
+                {
+                  ref: "MAGMA-C115-K",
+                  title: "Panne Magma C115-K",
+                  price: "95,00",
+                  stock: "42 en stock",
+                },
+                {
+                  ref: "KAISI-TX350E",
+                  title:
+                    "Microscope trinoculaire Kaisi TX-350E avec bras articulé MRS-1",
+                  price: "4 500,00",
+                  stock: "2 en stock",
+                },
+                {
+                  ref: "GOOT-CP1515",
+                  title: "Tresse à dessouder Goot CP-1515",
+                  price: "95,00",
+                  stock: "18 en stock",
+                },
+              ].map((p) => (
+                <div
+                  key={p.ref}
+                  style={{
+                    background: "var(--vfx-surface)",
+                    border: "1px solid var(--vfx-rule)",
+                    borderRadius: 2,
+                    overflow: "hidden",
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
+                  <div
+                    style={{
+                      aspectRatio: "1 / 1",
+                      background: "var(--vfx-photo-bg)",
+                      borderBottom: "1px solid var(--vfx-rule)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "var(--vfx-muted)",
+                      fontSize: 11,
+                      fontFamily: "var(--font-mono)",
+                    }}
+                  >
+                    photo well
+                  </div>
+                  <div
+                    style={{
+                      padding: "12px 14px 14px",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 6,
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontFamily: "var(--font-mono)",
+                        fontSize: 10,
+                        letterSpacing: "0.04em",
+                        textTransform: "uppercase",
+                        color: "var(--vfx-muted)",
+                      }}
+                    >
+                      REF · {p.ref}
+                    </div>
+                    {/* Pretext-managed title — group "s7-card" syncs heights */}
+                    <h3
+                      data-pretext
+                      data-pretext-group="s7-card"
+                      contentEditable="plaintext-only"
+                      suppressContentEditableWarning
+                      style={{
+                        fontFamily: "var(--font-body)",
+                        fontSize: 14,
+                        fontWeight: 500,
+                        color: "var(--vfx-ink)",
+                        lineHeight: 1.35,
+                        outline: "none",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {p.title}
+                    </h3>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "baseline",
+                        marginTop: 2,
+                        gap: 8,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: "var(--font-mono)",
+                          fontSize: 15,
+                          fontWeight: 500,
+                          color: "var(--vfx-accent)",
+                        }}
+                      >
+                        {p.price}
+                      </span>
+                      <span
+                        style={{
+                          fontFamily: "var(--font-mono)",
+                          fontSize: 11,
+                          color: "var(--vfx-muted)",
+                        }}
+                      >
+                        {p.stock}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div
+              style={{
+                marginTop: 16,
+                padding: "12px 14px",
+                background: "var(--vfx-bg)",
+                border: "1px dashed var(--vfx-rule)",
+                fontFamily: "var(--font-mono)",
+                fontSize: 11,
+                color: "var(--vfx-muted)",
+                letterSpacing: "0.04em",
+                lineHeight: 1.55,
+              }}
+            >
+              Implementation: <code>frontend/lib/pretext.ts</code> ·{" "}
+              <code>usePretextHeights()</code> called at the page root ·
+              awaits <code>document.fonts.ready</code> · ResizeObserver on{" "}
+              <code>document.body</code> · MutationObserver per
+              contenteditable element.
             </div>
           </section>
 
