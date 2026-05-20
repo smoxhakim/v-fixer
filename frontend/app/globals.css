@@ -241,3 +241,32 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ============================================================================
+   v-fixer radius hybrid spec (DESIGN.md, three-tier).
+   ============================================================================
+   Tier 1 (2px, strict): rectangular primitives — Button, Input, Textarea,
+   Select, Card. HeroUI v3 hardcodes radii on these via @apply rounded-3xl
+   (Button → 30px) / similar (Card → larger). The CSS variable override on
+   --radius does not reach them; we override the component classes directly.
+
+   Tier 2 (HeroUI defaults, unchanged): Chip / Avatar / Switch / Skeleton.
+   Conceptually round — pill chips, circular avatars, slider switches.
+
+   Tier 3 (9999px, explicit at usage site, not here): cart-count badge,
+   stock dots, mobile language toggle pill. Applied per-component, not
+   via globals.css.
+   ========================================================================== */
+@layer components {
+  .button {
+    border-radius: 2px;
+  }
+  .input,
+  .textarea,
+  .select {
+    border-radius: 2px;
+  }
+  .card {
+    border-radius: 2px;
+  }
+}

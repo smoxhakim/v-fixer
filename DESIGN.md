@@ -131,10 +131,11 @@ font-variation-settings: "opsz" <size>, "SOFT" 30;
 - **Approach:** grid-disciplined with a hybrid card/ruled-row split (see Risks below).
 - **Grid:** 12-col desktop, 6-col tablet, 1-col mobile.
 - **Max content width:** 1200px (tighter than SaaS default — catalog-flavored).
-- **Border radius:**
-  - **2px** on buttons, inputs, cards (functional, quiet — never bubble-radius)
-  - **0px** on ruled rows, table cells, image-well dividers
-  - **9999px** only on chips, pills, status badges
+- **Border radius — three-tier hybrid spec:**
+  - **2px (strict default for "primitives that exist as rectangles"):** Button, Input, Textarea, Select, Card. Functional, quiet, never bubble-radius. Override HeroUI's defaults (which are 30px pills on Button, 20px on Card etc.) via CSS rules in `globals.css` after the `@import '@heroui/styles'`.
+  - **HeroUI defaults survive for "primitives that are conceptually round":** Chip (brand chips like "MAGMA" stay pill-shaped — HeroUI's `rounded-[20px]`), Avatar (round by default — correct), Switch (slider physical metaphor — correct), Skeleton (matches the primitive it's standing in for).
+  - **9999px (explicit) for "anything that's literally a circle by intent":** cart-count badge in the top bar, in-stock / low-stock / out-stock dots, mobile language toggle pill, dot-nav indicators on the hero spread.
+  - **0px** on ruled rows, table cells, image-well dividers, photo well containers inside Cards (photos read true against hairline edges, not curves).
 - **Elevation:** hairline rules (`--rule`) + ink-weight changes. **Zero drop shadows. Zero glow.**
 - **Hairlines:** 1px solid in `--rule`. On retina, 0.5px is acceptable but never decorative.
 
@@ -229,7 +230,7 @@ In addition to the motion refusals above, the system refuses:
 
 - Gradients of any kind (backgrounds, buttons, accents).
 - Drop shadows, box-shadow elevation, glow effects.
-- Border-radius above 2px on cards/buttons/inputs (badges/pills excepted).
+- Border-radius above 2px on the rectangular primitives — Button, Input, Textarea, Select, Card. (Chip / Avatar / Switch / Skeleton keep HeroUI's defaults; explicit 9999px is reserved for circular-by-intent elements like badges, stock dots, and pill toggles.)
 - Sale ribbons, "NEW" badges, countdown timers, urgency banners.
 - Emoji in production UI.
 - Lifestyle stock photography, "trusted by" logo walls, testimonials carousels. (Hero *spreads* — user-controlled, max 3 slides, no overlay text — are allowed on the homepage only; see "Hero — user-controlled product spread" above.)
@@ -251,7 +252,7 @@ On product detail pages and cart totals, Latin and Arabic digits appear side-by-
 
 ## Implementation notes
 
-- **HeroUI migration:** wire HeroUI component tokens to the CSS custom properties above. The accent slot in HeroUI's theme should resolve to `--accent`. The default radius should resolve to 2px (HeroUI defaults to larger; override).
+- **HeroUI migration:** import HeroUI v3 via `@import '@heroui/styles'` at the top of `globals.css` (the package root chains base + components + theme + utilities + variants in layered cascade order). Then override CSS variables in `:root` / `.dark` blocks: `--accent → --vfx-accent`, `--background → --vfx-bg`, `--surface → --vfx-surface`, etc. Radii do NOT flow through token override (verified via M1 spike 2026-05-20 — HeroUI's button.css uses literal `@apply rounded-3xl`, not `var(--radius)`). Wire the three-tier radius spec from the Layout section via explicit CSS overrides after the import: `.button, .input, .textarea, .select, .card { border-radius: 2px; }` and leave Chip/Avatar/Switch/Skeleton at HeroUI defaults.
 - **shadcn-style components (admin):** the existing oklch-based palette in `frontend/app/globals.css` should be replaced with the hex values above. Migrate gradually — start with `--background`, `--foreground`, `--primary`, `--border`, then the rest.
 - **Tailwind v4:** define the design tokens in `@theme` in globals.css so utilities like `bg-bg`, `text-ink`, `border-rule`, `text-accent` are available.
 - **Fonts:** load from Google Fonts in the root layout. Set `next/font` for Geist and Fraunces if available; otherwise use the `<link>` above.

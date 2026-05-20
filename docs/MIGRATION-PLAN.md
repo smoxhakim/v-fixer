@@ -23,7 +23,9 @@ Wire the design system to the codebase. Nothing user-visible ships here; this is
 |---|---|
 | `frontend/app/globals.css` | Replace the OKLch shadcn token block (lines ~10–80) with DESIGN.md hex values as **canonical tokens** (`--bg`, `--surface`, `--ink`, `--muted`, `--rule`, `--accent`, `--in-stock`, `--low-stock`, `--out-stock`). In a separate `@theme inline` block, **alias** the shadcn-named tokens (`--color-primary: var(--accent)`, `--color-card: var(--surface)`, `--color-ring: var(--accent)`, …) and HeroUI plugin tokens to those canonical sources. Single source, multiple consumer namespaces — prevents drift. Add motion tokens (`--ease-*`, `--dur-*`). Add `prefers-reduced-motion` collapse rule. Permanent: do not delete shadcn aliases when migration completes — admin consumes them. |
 | `frontend/app/layout.tsx` | Swap `Inter` + `Noto_Sans_Arabic` from `next/font/google` for `Fraunces` (variable, opsz axis), `Geist`, `IBM_Plex_Sans_Arabic`, `JetBrains_Mono`. Wire each to a CSS variable (`--font-display`, `--font-body`, `--font-arabic`, `--font-mono`). Update the body `className` to apply `--font-body` by default, `--font-arabic` when `locale === 'ar'`. Verify `NextIntlClientProvider` wraps `HeroUIProviderWithIntlRouter` (not the reverse) — required for `BilingualPrice` in M2. |
-| `tailwind.config.ts` (new) OR `frontend/app/globals.css` `@plugin` directive | **HeroUI v3 has no `HeroUIProvider`** — confirmed by `frontend/components/heroui-provider-with-intl-router.tsx` and `@heroui/react@^3.0.4`. Theming routes through the Tailwind plugin layer. Configure `heroui({ themes: { light: { colors: {...}, layout: { radius: { small: '2px', medium: '2px', large: '2px' } } }, dark: {...} } })` — either in a `tailwind.config.ts` file or via Tailwind v4's `@plugin "@heroui/theme"` CSS directive in `globals.css`. Spike against `node_modules/@heroui/theme/dist/plugin.js` before writing the PR to confirm the exact config shape. |
+| `frontend/app/globals.css` (top of file) | **HeroUI v3 has neither `HeroUIProvider` nor a JS/Tailwind plugin** — confirmed by M1 spike 2026-05-20. The actual mechanism is CSS-cascade-only. Add `@import '@heroui/styles'` (package root, not `/themes/default`) at the top of `globals.css`; it loads HeroUI's full stack in the correct layer order: `@layer theme, base, components, utilities;` → tailwindcss → tw-animate-css → base styles → component CSS → default theme variables → utilities → variants. Then redefine the color variables (`--background`, `--surface`, `--accent`, `--default`, `--success`, `--warning`, `--danger`, `--border`, etc.) under `:root` / `.dark` / `[data-theme="..."]` CSS blocks with DESIGN.md hex values — cascade order means our values win. **No `tailwind.config.ts` needed. No `heroui()` plugin call.** Working reference shipped from the spike: see `frontend/app/globals.css` (single canonical `--vfx-*` source + HeroUI and shadcn aliases). |
+| `frontend/package.json` (M1 step 2 deliverable) | Add `"@heroui/styles": "^3.0.4"` as an explicit dependency. Currently transitive via `@heroui/react` and hoisted to the root `node_modules`. Explicit pin makes the dep version-controllable and survives lockfile churn. |
+| M2 component examples + DESIGN.md (M1 step 2 deliverable) | `grep -rE "\bCardBody\b" frontend/ docs/` and rename to `CardContent`. v3 renamed the slot (the v2 `CardBody` no longer exists in `@heroui/react`). At least the M2 primitives table referenced `CardBody`; sweep ahead of M2 build so primitives compile on first try. |
 | `frontend/lib/pretext.ts` (new) | Custom hook `usePretextHeights(refs, group?)` that imports `prepare` + `layout` from `@chenglou/pretext`, runs after `document.fonts.ready`, and observes window resize. Returns the computed `style.height` per ref. See the Risks section for the lifecycle decision. |
 | `frontend/package.json` | Add `@chenglou/pretext` to dependencies. |
 | `frontend/app/globals.css` | Single global rule for icon mirroring: `[dir="rtl"] [data-rtl-flip] { transform: scaleX(-1); }`. Drop the className utility approach — declarative attribute on the icon is cleaner. |
@@ -33,18 +35,19 @@ Wire the design system to the codebase. Nothing user-visible ships here; this is
 ### Dependencies
 
 - Confirm `@chenglou/pretext` is published on npm. If not, vendor `pretext.js` into `frontend/lib/vendor/pretext.js` and import locally.
-- **HeroUI v3 themes are Tailwind-plugin-based, not provider-based.** Verify the `heroui({ themes })` config shape against the installed `@heroui/theme` package (run `node -e "console.log(Object.keys(require('@heroui/theme')))"`). Do this before writing M1.3 code.
+- **HeroUI v3 themes are CSS-cascade-based, not provider-based and not plugin-based.** Confirmed by M1 spike 2026-05-20: `@heroui/styles` ships a package-root `index.css` that chains all theme/base/component/utility/variant CSS via `@import` in layered order. There is no `heroui()` JS export, no Tailwind plugin function, and no `HeroUIProvider`. Override mechanism is straight CSS cascade: import the package, redefine the variables in `:root` / `.dark`. (The autoplan correction that pointed at a `heroui({ themes })` plugin was wrong — the spike found the actual mechanism.) Existing reference: the spike's `frontend/app/globals.css`.
 - Tailwind v4 reads tokens from `@theme` blocks; confirm the existing `@source` directive for `node_modules/@heroui/theme/dist/**/*` still emits the utilities we need after the token swap. After any token swap, `rm -rf frontend/.next` to force a clean Tailwind rebuild — HMR sometimes misses changes in node_modules.
 
 ### Sequence
 
-1. Token block in `globals.css` first (it's a leaf — nothing depends on it). Single canonical source + aliases.
-2. `next/font` setup in `layout.tsx` next (depends on globals being set so the CSS variables exist). Verify provider wrap order.
-3. HeroUI Tailwind plugin config (depends on canonical tokens existing).
+1. `@import '@heroui/styles'` at the top of `globals.css` (loads HeroUI's full layered stack — must come BEFORE our token overrides so cascade wins).
+2. Token block in `globals.css` under `:root` / `.dark` (canonical `--vfx-*` source + shadcn + HeroUI variable aliases). Also: add explicit `"@heroui/styles": "^3.0.4"` to `frontend/package.json`, and run the `grep -rE "\bCardBody\b" frontend/ docs/` rename sweep.
+3. `next/font` setup in `layout.tsx` next (depends on globals being set so the CSS variables exist). Verify provider wrap order.
 4. Pretext hook + npm dependency.
 5. RTL global rule + `data-rtl-flip` attribute pattern.
-6. Theme-probe specimen page (exit gate — M1 doesn't merge until clean).
-7. HeroUI radius audit deliverable produced; per-slot `classNames` overrides documented.
+6. **Dev page location constraint** (documentation step, no code). Next.js 16's `frontend/proxy.ts` is the v16-era replacement for `middleware.ts`. It wraps `createMiddleware(routing)` from `next-intl` with `localePrefix: "always"`. Effect: every non-locale path (e.g. `/dev/theme-probe`, `/sandbox/*`) redirects to `/fr/...` and 404s unless the file exists under `[locale]/`. **All dev / probe / sandbox / internal-tooling pages MUST live under `frontend/app/[locale]/...`** for the duration of the migration. Document this in CLAUDE.md once M1 ships.
+7. Theme-probe specimen page at `frontend/app/[locale]/dev/theme-probe/page.tsx` (exit gate — M1 doesn't merge until the probe shows DESIGN.md colors flowing into Button/Chip/Card in both themes with no default-token leakage).
+8. HeroUI radius audit deliverable produced; per-slot `classNames` overrides documented. **The spike confirmed radii do NOT flow through CSS variable override** — Button.css uses literal `@apply rounded-3xl` (30px) and Chip.css uses `rounded-[20px]`. DESIGN.md's 2px on buttons requires an explicit CSS override (`.button { border-radius: 2px; }`) OR per-instance `classNames`. **Decision committed 2026-05-20 (three-tier hybrid spec):** Tier 1 → 2px override on `.button`, `.input`, `.textarea`, `.select`, `.card` (shipped in `globals.css @layer components`); Tier 2 → HeroUI defaults survive for `.chip` / `.avatar` / `.switch` / `.skeleton`; Tier 3 → explicit `9999px` on cart-count badge, stock dots, mobile language toggle pill. See DESIGN.md "Border radius — three-tier hybrid spec" for canonical wording.
 
 ### Risks (M1)
 
@@ -290,47 +293,57 @@ Page-by-page, never batched. The goal is to catch design-system drift early — 
 
 **Why it's high-stakes:** every HeroUI primitive consumed without an override will visually contradict the design system. A single `<Button>` rendered with HeroUI defaults shows a 12px rounded button, defeating the entire visual refusal list.
 
-**Mitigation — corrected after /autoplan:**
+**Mitigation — re-corrected after M1 spike 2026-05-20:**
 
-1. **HeroUI v3 has NO `HeroUIProvider` and NO `theme` prop.** Confirmed by reading `frontend/components/heroui-provider-with-intl-router.tsx` (which only uses `I18nProvider` + `RouterProvider` from `@heroui/react`) and the absence of `HeroUIProvider` in the installed package. Themes route through the **Tailwind plugin layer**. Configure via `tailwind.config.ts` plugin OR Tailwind v4 `@plugin` directive in `globals.css`:
+1. **HeroUI v3 has NO `HeroUIProvider`, NO `theme` prop, AND NO Tailwind plugin.** Confirmed by spike: the installed `@heroui/react@^3.0.4` exports only `I18nProvider` + `RouterProvider` (React Aria primitives); the `@heroui/styles` package contains zero JS exports for theming (only CSS files). The autoplan correction that proposed a `heroui({ themes })` Tailwind plugin call was also wrong — that mechanism exists in v2, not v3. **Actual mechanism: pure CSS cascade.** Import the package root, then override CSS variables in `globals.css`:
 
-   ```ts
-   // tailwind.config.ts (or equivalent @plugin directive in CSS)
-   import { heroui } from '@heroui/theme'
+   ```css
+   /* frontend/app/globals.css */
 
-   export default {
-     plugins: [
-       heroui({
-         themes: {
-           light: {
-             colors: {
-               primary:    { DEFAULT: '#1E5A8A', foreground: '#FFFFFF' },
-               background: '#F5F1E8',
-               foreground: '#1C1A17',
-               default:    { 100: '#FBF8F1', 200: '#EFEADF', 500: '#6B655A' },
-               danger:     { DEFAULT: '#8A2A2A' },
-               success:    { DEFAULT: '#4F6B3A' },
-               warning:    { DEFAULT: '#8B6F47' },
-             },
-             layout: {
-               radius:      { small: '2px', medium: '2px', large: '2px' },
-               borderWidth: { small: '1px', medium: '1px', large: '1px' },
-             },
-           },
-           dark: { /* same shape, dark hexes */ },
-         },
-       }),
-     ],
+   /* Package root chains: @layer theme,base,components,utilities; →
+      tailwindcss → tw-animate-css → base → components → default theme
+      → utilities → variants. This must come BEFORE our overrides. */
+   @import '@heroui/styles';
+
+   /* DESIGN.md canonical tokens — single source */
+   :root, .light, [data-theme="light"] {
+     --vfx-bg:      #F5F1E8;
+     --vfx-surface: #FBF8F1;
+     --vfx-ink:     #1C1A17;
+     --vfx-accent:  #1E5A8A;
+     /* ... etc */
+
+     /* HeroUI v3 variable names — alias to canonical */
+     --background:   var(--vfx-bg);
+     --foreground:   var(--vfx-ink);
+     --surface:      var(--vfx-surface);
+     --accent:       var(--vfx-accent);
+     --accent-foreground: #FFFFFF;
+     --success:      var(--vfx-in-stock);
+     --warning:      var(--vfx-low-stock);
+     --danger:       var(--vfx-out-stock);
+     --border:       var(--vfx-rule);
+     /* ... etc */
+
+     /* Shadcn names also alias to canonical — admin keeps rendering */
+     --primary: var(--vfx-accent);
+     --card:    var(--vfx-surface);
+     /* ... etc */
+   }
+
+   .dark, [data-theme="dark"] {
+     /* DESIGN.md dark canonical, same alias structure */
+     /* ... */
    }
    ```
 
-   Hex values written inline rather than `var(--accent)` because Tailwind plugins evaluate at build time, before CSS variables exist. The runtime tokens in `globals.css` and the build-time plugin config both point to the same DESIGN.md hexes — keep them in sync.
+   Cascade order: HeroUI's package-root sets defaults under `:root`; our `:root` block (declared later in the same file) wins. CSS-only — no build-time plugin to keep in sync.
 
-2. **Pre-write per-slot `classNames` overrides** for primitives that hardcode radii. From the M1 deliverable: enumerate every HeroUI primitive used, grep its `dist` for `rounded-*`, identify slots that ignore `layout.radius` (Chip, Avatar, Switch thumb, Skeleton are known offenders). Document overrides in `frontend/components/ui/heroui-overrides.ts` for reuse.
+2. **Radii do NOT flow through token override.** Spike confirmed: HeroUI's `button.css` uses literal `@apply rounded-3xl` (30px), `chip.css` uses `rounded-[20px]`. There is no `var(--radius)` reference in the button/chip CSS. To get DESIGN.md's 2px on buttons, options are: (a) a global override rule `.button { border-radius: 2px; }` in `globals.css` after the HeroUI import, or (b) per-instance `<Button classNames={{ base: 'rounded-[2px]' }}>`. **Per-primitive strategic decision pending user call.** Document in `frontend/components/ui/heroui-overrides.css` once decided.
 
 3. **Block adding new HeroUI primitives without a theme audit** — codify in CLAUDE.md so future Claude doesn't sneak a default-themed `<Card>` in.
 
-4. **M1 exit gate enforces this:** the `/dev/theme-probe` page renders every primitive in both themes. M1 doesn't merge until zero default-token leakage and consistent radii.
+4. **M1 exit gate enforces this:** the `/dev/theme-probe` page at `frontend/app/[locale]/dev/theme-probe/page.tsx` (note: must live under `[locale]/` due to `proxy.ts` locale-prefix routing) renders every primitive in both themes. M1 doesn't merge until zero default-token leakage and the radius strategy is committed.
 
 **Decision verified before M1 starts:** plugin config shape confirmed against `node_modules/@heroui/theme/dist/plugin.js` during the 30-minute pre-M1 spike.
 
@@ -424,13 +437,15 @@ These three open content tasks block public launch but are not design-system wor
 
 | Milestone | Effort | Calendar (solo) |
 |---|---|---|
-| M1 — Foundations (now includes theme-probe exit gate + HeroUI radius enumeration) | 2–2.5 days | 2.5 days |
+| M1 — Foundations (CSS-cascade theming + theme-probe exit gate + radius audit) | 1.5–2 days | 2 days |
 | M2 — Primitives (now includes Type foundations step 0, `CrossFadeStack`, `CartPulse`, RTL smoke test) | 5–6 days | 6 days |
 | M3 — Pages (PDP → Category → Cart → Homepage) | 5–7 days | 7 days |
 | M4 — QA + Ship | 2.5–3 days | 3 days |
-| **Total** | **14.5–18.5 days** | **~3.5–4 weeks** |
+| **Total** | **14–18 days** | **~3.5–4 weeks** |
 
-The /autoplan review pushed the estimate up by ~2.5 days (Type foundations + theme-probe + radius audit + RTL smoke test). Those days buy real risk reduction: M2 starts on type-safe primitives, M1's exit gate catches token leakage before it multiplies, and the M2 RTL smoke test catches HeroUI compiled-CSS leaks before three M3 pages depend on them.
+M1 shortened by ~0.5 day after the spike: the actual HeroUI v3 mechanism is two lines of CSS (`@import '@heroui/styles'` + token block) rather than a build-time Tailwind plugin config with light/dark theme objects. No `tailwind.config.ts` to author, no `heroui()` call to keep in sync, no inline hex values to mirror between runtime CSS and build-time config. Theme-probe exit gate, radius audit, and per-slot classNames work all still required — but the wiring step itself is genuinely simpler than the autoplan-corrected plan claimed. **Confirmed.**
+
+(The /autoplan review pushed total effort up by ~2.5 days for risk-reduction work — Type foundations + theme-probe + radius audit + RTL smoke test. The spike then trimmed 0.5 day off M1. Net: +2 days over the pre-autoplan baseline. Those days still buy real risk reduction.)
 
 The migration is dominated by M3 (page composition + data wiring). M1 and M2 are unblocking work — the primitive library is the leverage that makes M3 tractable. M4 is sequential and per-page, so it overlaps with M3 in practice: page A's M4 runs while page B's M3 starts.
 

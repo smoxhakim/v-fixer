@@ -13,6 +13,7 @@
 
 import { useEffect, useState } from "react";
 import {
+  Avatar,
   Button,
   Card,
   CardContent,
@@ -20,6 +21,8 @@ import {
   CardFooter,
   Chip,
   I18nProvider,
+  Input,
+  Switch,
 } from "@heroui/react";
 
 export default function ThemeProbe() {
@@ -367,6 +370,227 @@ export default function ThemeProbe() {
                   </Button>
                 </CardFooter>
               </Card>
+            </div>
+          </section>
+
+          {/* Radius categories — three-tier spec side by side */}
+          <section style={{ marginBottom: 40 }}>
+            <h2
+              style={{
+                fontSize: 11,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: "var(--vfx-muted)",
+                marginBottom: 12,
+              }}
+            >
+              05 · Radius categories (three-tier spec)
+            </h2>
+
+            {/* Tier 1: 2px override */}
+            <div style={{ marginBottom: 24 }}>
+              <div
+                style={{
+                  fontFamily: "ui-monospace, monospace",
+                  fontSize: 10,
+                  letterSpacing: "0.05em",
+                  textTransform: "uppercase",
+                  color: "var(--vfx-accent)",
+                  marginBottom: 8,
+                }}
+              >
+                Tier 1 · 2px · rectangular primitives
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 12,
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                }}
+              >
+                <Button color="primary">Button</Button>
+                <Input placeholder="Input" style={{ width: 180 }} />
+                <Card style={{ padding: "10px 14px", minWidth: 140 }}>
+                  <span style={{ fontSize: 13 }}>Card</span>
+                </Card>
+              </div>
+            </div>
+
+            {/* Tier 2: HeroUI defaults */}
+            <div style={{ marginBottom: 24 }}>
+              <div
+                style={{
+                  fontFamily: "ui-monospace, monospace",
+                  fontSize: 10,
+                  letterSpacing: "0.05em",
+                  textTransform: "uppercase",
+                  color: "var(--vfx-muted)",
+                  marginBottom: 8,
+                }}
+              >
+                Tier 2 · HeroUI defaults · conceptually round
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 12,
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                }}
+              >
+                <Chip color="primary">Chip (pill)</Chip>
+                <Chip color="success" variant="bordered">
+                  42 en stock
+                </Chip>
+                <Avatar name="MT" />
+                <Switch defaultSelected />
+              </div>
+            </div>
+
+            {/* Tier 3: 9999px explicit, circular by intent */}
+            <div>
+              <div
+                style={{
+                  fontFamily: "ui-monospace, monospace",
+                  fontSize: 10,
+                  letterSpacing: "0.05em",
+                  textTransform: "uppercase",
+                  color: "var(--vfx-muted)",
+                  marginBottom: 8,
+                }}
+              >
+                Tier 3 · 9999px · circular by intent
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 18,
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                }}
+              >
+                {/* Cart badge */}
+                <span
+                  style={{
+                    position: "relative",
+                    padding: "8px 14px",
+                    background: "var(--vfx-surface)",
+                    border: "1px solid var(--vfx-rule)",
+                    borderRadius: 2,
+                    fontFamily: "ui-monospace, monospace",
+                    fontSize: 11,
+                    color: "var(--vfx-ink)",
+                    letterSpacing: "0.04em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Panier
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: -6,
+                      right: -6,
+                      minWidth: 18,
+                      height: 18,
+                      padding: "0 5px",
+                      background: "var(--vfx-accent)",
+                      color: "#fff",
+                      border: "2px solid var(--vfx-bg)",
+                      borderRadius: 9999,
+                      fontSize: 10,
+                      fontWeight: 600,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      lineHeight: 1,
+                    }}
+                  >
+                    3
+                  </span>
+                </span>
+
+                {/* Stock dots */}
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontFamily: "ui-monospace, monospace",
+                    fontSize: 12,
+                    color: "var(--vfx-muted)",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 9999,
+                      background: "var(--vfx-accent)",
+                    }}
+                  />
+                  in
+                </span>
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontFamily: "ui-monospace, monospace",
+                    fontSize: 12,
+                    color: "var(--vfx-muted)",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 9999,
+                      background: "var(--vfx-low-stock)",
+                    }}
+                  />
+                  low
+                </span>
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontFamily: "ui-monospace, monospace",
+                    fontSize: 12,
+                    color: "var(--vfx-muted)",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 9999,
+                      background: "var(--vfx-out-stock)",
+                    }}
+                  />
+                  out
+                </span>
+
+                {/* Language toggle pill (mobile-style) */}
+                <button
+                  type="button"
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 9999,
+                    background: "var(--vfx-surface)",
+                    border: "1px solid var(--vfx-rule)",
+                    fontFamily: "ui-monospace, monospace",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: "var(--vfx-ink)",
+                    cursor: "pointer",
+                  }}
+                >
+                  FR
+                </button>
+              </div>
             </div>
           </section>
 
