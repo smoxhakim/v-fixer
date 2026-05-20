@@ -144,13 +144,11 @@ export function Header() {
           {/* Categories mega-menu */}
           <div className="hidden lg:flex">
             <Dropdown>
-              <DropdownTrigger>
-                <Button
-                  variant="ghost"
-                  className="rounded-md h-9 px-3 text-sm text-foreground hover:bg-secondary"
-                >
-                  {t("categories")}
-                </Button>
+              <DropdownTrigger
+                variant="ghost"
+                className="rounded-md h-9 px-3 text-sm text-foreground hover:bg-secondary"
+              >
+                {t("categories")}
               </DropdownTrigger>
               <DropdownPopover className="bg-card border border-border rounded-lg p-1 shadow-xl min-w-[14rem]">
                 <DropdownMenu
