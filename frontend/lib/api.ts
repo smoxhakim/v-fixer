@@ -7,15 +7,240 @@ import {
   normalizeHomeHeroResponse,
   type HomeHeroSlidePayload,
 } from "@/lib/home-hero";
-import { normalizeProductImages } from "@/lib/media-url";
+import { resolveMediaSrc } from "@/lib/media-url";
 import { getApiUrl } from "./api-url";
 
 export { getApiUrl };
 
 export type { BestSellingDisplayRow, BestSellingInputRow, HomeHeroSlidePayload };
 
-export type Category = any;
-export type Product = any;
+/* ============================================================================
+   Canonical Product / Category types — single source of truth.
+   ============================================================================
+   Backend (Django + DRF + djangorestframework-camel-case) emits:
+     - id as number, decimals as strings, optional fields as null
+   We normalize at the wire boundary so consumers see:
+     - id: number, decimals: number, optional fields: undefined
+   Call normalizeProduct() / normalizeCategory() on every response.
+   ========================================================================== */
+
+export interface ProductSpec {
+  label: string;
+  value: string;
+}
+
+export interface Product {
+  id: number;
+  name: string;
+  slug: string;
+  categorySlug?: string;
+  price: number;
+  discountPrice?: number;
+  costPrice?: number;
+  rating: number;
+  images: string[];
+  shortDescription?: string;
+  description?: string;
+  specs: ProductSpec[];
+  stock: number;
+}
+
+export interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  icon?: string;
+  imageUrl?: string;
+  parent?: number;
+}
+
+/* ----------------------------- coercion helpers --------------------------- */
+
+function coerceString(v: unknown): string | undefined {
+  if (v == null) return undefined;
+  const s = String(v).trim();
+  return s.length > 0 ? s : undefined;
+}
+
+function coerceNumber(v: unknown): number | undefined {
+  if (v == null || v === "") return undefined;
+  const n = typeof v === "number" ? v : Number(v);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+/* --------------------------- normalizers (wire → runtime) ----------------- */
+
+/**
+ * Coerce a raw backend response into a canonical Product.
+ * Throws if id, name, slug, or price are missing/invalid.
+ * Accepts camelCase or snake_case keys at the wire boundary.
+ */
+export function normalizeProduct(raw: unknown): Product {
+  if (raw == null || typeof raw !== "object") {
+    throw new Error(
+      `normalizeProduct: expected object, got ${raw === null ? "null" : typeof raw}`,
+    );
+  }
+  const r = raw as Record<string, unknown>;
+
+  const id = coerceNumber(r.id);
+  if (id === undefined) {
+    throw new Error(
+      `normalizeProduct: missing or invalid id (got ${JSON.stringify(r.id)})`,
+    );
+  }
+  const name = coerceString(r.name);
+  if (name === undefined) {
+    throw new Error(`normalizeProduct: missing or empty name (id=${id})`);
+  }
+  const slug = coerceString(r.slug);
+  if (slug === undefined) {
+    throw new Error(`normalizeProduct: missing or empty slug (id=${id})`);
+  }
+  const price = coerceNumber(r.price);
+  if (price === undefined) {
+    throw new Error(
+      `normalizeProduct: missing or invalid price (slug=${slug}, got ${JSON.stringify(r.price)})`,
+    );
+  }
+
+  const discountPrice = coerceNumber(r.discountPrice ?? r.discount_price);
+  const costPrice = coerceNumber(r.costPrice ?? r.cost_price);
+  const rating = coerceNumber(r.rating) ?? 0;
+
+  const categorySlug = coerceString(r.categorySlug ?? r.category_slug);
+  const shortDescription = coerceString(
+    r.shortDescription ?? r.short_description,
+  );
+  const description = coerceString(r.description);
+
+  const images: string[] = Array.isArray(r.images)
+    ? (r.images as unknown[])
+        .map((u) => (typeof u === "string" ? u.trim() : ""))
+        .filter((u) => u.length > 0)
+        .map((u) => resolveMediaSrc(u))
+    : [];
+
+  const specs: ProductSpec[] = Array.isArray(r.specs)
+    ? (r.specs as unknown[])
+        .map((s): ProductSpec | null => {
+          if (s == null || typeof s !== "object") return null;
+          const sr = s as Record<string, unknown>;
+          const label = coerceString(sr.label);
+          const value = coerceString(sr.value);
+          if (!label || !value) return null;
+          return { label, value };
+        })
+        .filter((s): s is ProductSpec => s !== null)
+    : [];
+
+  const stock = coerceNumber(r.stock) ?? 0;
+
+  return {
+    id,
+    name,
+    slug,
+    categorySlug,
+    price,
+    discountPrice,
+    costPrice,
+    rating,
+    images,
+    shortDescription,
+    description,
+    specs,
+    stock,
+  };
+}
+
+/**
+ * Coerce a raw backend response into a canonical Category.
+ * Throws if id, name, or slug are missing/invalid.
+ */
+export function normalizeCategory(raw: unknown): Category {
+  if (raw == null || typeof raw !== "object") {
+    throw new Error(
+      `normalizeCategory: expected object, got ${raw === null ? "null" : typeof raw}`,
+    );
+  }
+  const r = raw as Record<string, unknown>;
+
+  const id = coerceNumber(r.id);
+  if (id === undefined) {
+    throw new Error(
+      `normalizeCategory: missing or invalid id (got ${JSON.stringify(r.id)})`,
+    );
+  }
+  const name = coerceString(r.name);
+  if (name === undefined) {
+    throw new Error(`normalizeCategory: missing or empty name (id=${id})`);
+  }
+  const slug = coerceString(r.slug);
+  if (slug === undefined) {
+    throw new Error(`normalizeCategory: missing or empty slug (id=${id})`);
+  }
+
+  const icon = coerceString(r.icon);
+  const imageUrlRaw = coerceString(r.imageUrl ?? r.image_url);
+  const imageUrl = imageUrlRaw ? resolveMediaSrc(imageUrlRaw) : undefined;
+  const parent = coerceNumber(r.parent);
+
+  return { id, name, slug, icon, imageUrl, parent };
+}
+
+/* --------------------------- runtime assertions -------------------------- */
+
+/**
+ * Type-narrow `value` to Product. Use after a fetch boundary to catch
+ * schema drift early. Throws a descriptive Error on shape mismatch.
+ */
+export function assertProduct(value: unknown): asserts value is Product {
+  if (value == null || typeof value !== "object") {
+    throw new Error(
+      `assertProduct: expected object, got ${value === null ? "null" : typeof value}`,
+    );
+  }
+  const v = value as Record<string, unknown>;
+  if (typeof v.id !== "number" || !Number.isFinite(v.id)) {
+    throw new Error(`assertProduct: invalid id (${JSON.stringify(v.id)})`);
+  }
+  if (typeof v.name !== "string" || v.name.length === 0) {
+    throw new Error(`assertProduct: invalid name (id=${v.id})`);
+  }
+  if (typeof v.slug !== "string" || v.slug.length === 0) {
+    throw new Error(`assertProduct: invalid slug (id=${v.id})`);
+  }
+  if (typeof v.price !== "number" || !Number.isFinite(v.price)) {
+    throw new Error(`assertProduct: invalid price (slug=${String(v.slug)})`);
+  }
+  if (!Array.isArray(v.images)) {
+    throw new Error(`assertProduct: images must be array (slug=${String(v.slug)})`);
+  }
+  if (!Array.isArray(v.specs)) {
+    throw new Error(`assertProduct: specs must be array (slug=${String(v.slug)})`);
+  }
+}
+
+/**
+ * Type-narrow `value` to Category. Throws on shape mismatch.
+ */
+export function assertCategory(value: unknown): asserts value is Category {
+  if (value == null || typeof value !== "object") {
+    throw new Error(
+      `assertCategory: expected object, got ${value === null ? "null" : typeof value}`,
+    );
+  }
+  const v = value as Record<string, unknown>;
+  if (typeof v.id !== "number" || !Number.isFinite(v.id)) {
+    throw new Error(`assertCategory: invalid id (${JSON.stringify(v.id)})`);
+  }
+  if (typeof v.name !== "string" || v.name.length === 0) {
+    throw new Error(`assertCategory: invalid name (id=${v.id})`);
+  }
+  if (typeof v.slug !== "string" || v.slug.length === 0) {
+    throw new Error(`assertCategory: invalid slug (id=${v.id})`);
+  }
+}
 export interface ImportErrorRow {
   row: number;
   message: string;
@@ -171,7 +396,14 @@ export async function getCategories(): Promise<Category[]> {
   const res = await apiFetch(`${getApiUrl()}/categories/`, { next: { revalidate: 60 } });
   if (!res?.ok) return [];
   const data = await readJsonBody<unknown>(res, []);
-  return Array.isArray(data) ? data : [];
+  if (!Array.isArray(data)) return [];
+  // Normalize per-row; drop entries that fail (don't take the whole list down)
+  const out: Category[] = [];
+  for (const raw of data) {
+    try { out.push(normalizeCategory(raw)); }
+    catch (e) { console.warn("getCategories: dropping malformed entry", e); }
+  }
+  return out;
 }
 
 export async function getCategory(slug: string): Promise<Category | null> {
@@ -180,8 +412,9 @@ export async function getCategory(slug: string): Promise<Category | null> {
   });
   if (!res?.ok) return null;
   const data = await readJsonBody<unknown>(res, null);
-  if (data == null || typeof data !== "object") return null;
-  return data as Category;
+  if (data == null) return null;
+  try { return normalizeCategory(data); }
+  catch (e) { console.warn(`getCategory(${slug}): malformed response`, e); return null; }
 }
 
 export async function getProducts(params?: {
@@ -204,7 +437,13 @@ export async function getProducts(params?: {
   const res = await apiFetch(`${getApiUrl()}/products/${queryString}`, fetchInit);
   if (!res?.ok) return [];
   const data = await readJsonBody<unknown>(res, []);
-  return Array.isArray(data) ? data.map((p) => normalizeProductImages(p as Product)) : [];
+  if (!Array.isArray(data)) return [];
+  const out: Product[] = [];
+  for (const raw of data) {
+    try { out.push(normalizeProduct(raw)); }
+    catch (e) { console.warn("getProducts: dropping malformed entry", e); }
+  }
+  return out;
 }
 
 export async function getProduct(slug: string): Promise<Product | null> {
@@ -212,8 +451,9 @@ export async function getProduct(slug: string): Promise<Product | null> {
   const res = await apiFetch(`${getApiUrl()}/products/${safe}/`, { next: { revalidate: 60 } });
   if (!res?.ok) return null;
   const data = await readJsonBody<unknown>(res, null);
-  if (data == null || typeof data !== "object") return null;
-  return normalizeProductImages(data as Product);
+  if (data == null) return null;
+  try { return normalizeProduct(data); }
+  catch (e) { console.warn(`getProduct(${slug}): malformed response`, e); return null; }
 }
 
 export async function getHomeHero() {
@@ -287,7 +527,12 @@ export async function getHotDeals(): Promise<Product[]> {
   if (!res?.ok) return [];
   const raw = await readJsonBody<{ items?: unknown }>(res, { items: [] });
   const items = raw && typeof raw === "object" && Array.isArray(raw.items) ? raw.items : [];
-  return items.map((p) => normalizeProductImages(p as Product));
+  const out: Product[] = [];
+  for (const p of items) {
+    try { out.push(normalizeProduct(p)); }
+    catch (e) { console.warn("getHotDeals: dropping malformed entry", e); }
+  }
+  return out;
 }
 
 export async function updateHotDeals(productSlugs: string[], token: string): Promise<Product[]> {
@@ -305,7 +550,12 @@ export async function updateHotDeals(productSlugs: string[], token: string): Pro
   const raw: unknown = await res.json();
   const data = raw && typeof raw === "object" ? (raw as { items?: unknown }).items : [];
   const items = Array.isArray(data) ? data : [];
-  return items.map((p) => normalizeProductImages(p as Product));
+  const out: Product[] = [];
+  for (const p of items) {
+    try { out.push(normalizeProduct(p)); }
+    catch (e) { console.warn("updateHotDeals: dropping malformed entry", e); }
+  }
+  return out;
 }
 
 export async function getOrders(token?: string | null): Promise<Order[]> {
@@ -411,7 +661,7 @@ export async function createProduct(data: any, token: string): Promise<Product> 
   if (!res?.ok) {
     throw new Error(await extractApiErrorMessage(res, "Failed to create product"));
   }
-  return res.json();
+  return normalizeProduct(await res.json());
 }
 
 export async function createCategory(data: any, token: string): Promise<Category> {
@@ -424,7 +674,7 @@ export async function createCategory(data: any, token: string): Promise<Category
     body: JSON.stringify(data),
   });
   if (!res?.ok) throw new Error(await extractApiErrorMessage(res, "Failed to create category"));
-  return res.json();
+  return normalizeCategory(await res.json());
 }
 
 export async function patchOrder(
@@ -469,7 +719,7 @@ export async function updateProductBySlug(
     },
   );
   if (!res?.ok) throw new Error(await extractApiErrorMessage(res, "Failed to update product"));
-  return res.json();
+  return normalizeProduct(await res.json());
 }
 
 export async function deleteProductBySlug(slug: string, token: string): Promise<void> {
@@ -499,7 +749,7 @@ export async function updateCategoryBySlug(
     },
   );
   if (!res?.ok) throw new Error(await extractApiErrorMessage(res, "Failed to update category"));
-  return res.json();
+  return normalizeCategory(await res.json());
 }
 
 export async function deleteCategoryBySlug(
