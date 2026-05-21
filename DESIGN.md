@@ -250,6 +250,30 @@ A single restrained `#1E5A8A` accent on linen `#F5F1E8`. Departs from both MENA 
 **R3 — Bilingual numerals on price detail.**
 On product detail pages and cart totals, Latin and Arabic digits appear side-by-side in tabular mono (e.g., `4,370.00 MAD · ٤٬٣٧٠.٠٠`). Cultural fluency no MENA competitor offers. Costs ~12% horizontal space on price detail components. Can be disabled if mobile space gets tight.
 
+## RTL handling
+
+Arabic is first-class — set via `dir="rtl"` on `<html>` when `locale === "ar"` (already wired in `frontend/app/layout.tsx`). The font automatically switches to IBM Plex Sans Arabic via the `[dir="rtl"] body` selector in `globals.css`.
+
+**Directional icons mirror via attribute, not className.** Single global rule in `globals.css @layer base`:
+
+```css
+[dir="rtl"] [data-rtl-flip] { transform: scaleX(-1); }
+```
+
+Mark icons with `data-rtl-flip` when their visual direction encodes UI direction. The attribute is **opt-in** — bare icons / wordmarks / photos never flip.
+
+| Apply `data-rtl-flip` | Skip it |
+|---|---|
+| Arrow CTAs (`Acheter →`) — the arrow encodes "forward" | Search / magnifying glass — rotationally symmetric-ish |
+| Breadcrumb chevrons — encode hierarchy direction | Qty stepper `+` / `−` — math symbols, neutral |
+| Pagination prev / next arrows | Cart icon — neutral pictogram |
+| Gallery prev / next, HeroSpread arrows | Logos, wordmarks, brand marks |
+| Hero "see more" arrows | Product photos — content has its own correct orientation |
+
+Convention: scope the attribute to the actual arrow element, not the whole link. For `Acheter →` the `ArrowRight` icon gets `data-rtl-flip`; the `<a>` and the text "Acheter" don't.
+
+HeroUI's compiled CSS leaks physical properties (`padding-left`, `margin-right`) in some primitives (`Input`, `Drawer`, `Navbar`, `Select`). These will need explicit `[dir="rtl"]` overrides in `globals.css` during M2 — see migration plan Risk 2. Out of scope for the M1 rule itself.
+
 ## Implementation notes
 
 - **HeroUI migration:** import HeroUI v3 via `@import '@heroui/styles'` at the top of `globals.css` (the package root chains base + components + theme + utilities + variants in layered cascade order). Then override CSS variables in `:root` / `.dark` blocks: `--accent → --vfx-accent`, `--background → --vfx-bg`, `--surface → --vfx-surface`, etc. Radii do NOT flow through token override (verified via M1 spike 2026-05-20 — HeroUI's button.css uses literal `@apply rounded-3xl`, not `var(--radius)`). Wire the three-tier radius spec from the Layout section via explicit CSS overrides after the import: `.button, .input, .textarea, .select, .card { border-radius: 2px; }` and leave Chip/Avatar/Switch/Skeleton at HeroUI defaults.

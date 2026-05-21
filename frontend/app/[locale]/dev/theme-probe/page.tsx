@@ -25,9 +25,11 @@ import {
   Switch,
 } from "@heroui/react";
 import { usePretextHeights } from "@/lib/pretext";
+import { ArrowRight, ChevronRight } from "lucide-react";
 
 export default function ThemeProbe() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [s8Dir, setS8Dir] = useState<"ltr" | "rtl">("ltr");
   usePretextHeights();
 
   useEffect(() => {
@@ -1062,6 +1064,352 @@ export default function ThemeProbe() {
               awaits <code>document.fonts.ready</code> · ResizeObserver on{" "}
               <code>document.body</code> · MutationObserver per
               contenteditable element.
+            </div>
+          </section>
+
+          {/* RTL flip — opt-in via data-rtl-flip attribute */}
+          <section style={{ marginBottom: 40 }}>
+            <h2
+              style={{
+                fontSize: 11,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: "var(--vfx-muted)",
+                marginBottom: 12,
+              }}
+            >
+              08 · RTL flip (opt-in via data-rtl-flip)
+            </h2>
+
+            <p
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: 11,
+                letterSpacing: "0.04em",
+                color: "var(--vfx-muted)",
+                marginBottom: 14,
+                lineHeight: 1.55,
+              }}
+            >
+              Click the toggle to flip the framed region&apos;s{" "}
+              <code
+                style={{
+                  background: "var(--vfx-surface-2)",
+                  padding: "1px 5px",
+                  borderRadius: 2,
+                }}
+              >
+                dir
+              </code>
+              . Single global rule in <code>globals.css</code>:{" "}
+              <code
+                style={{
+                  background: "var(--vfx-surface-2)",
+                  padding: "1px 5px",
+                  borderRadius: 2,
+                }}
+              >
+                [dir=&quot;rtl&quot;] [data-rtl-flip] {`{ transform: scaleX(-1); }`}
+              </code>
+              . Elements without the attribute (wordmark, photo) stay put.
+              The page&apos;s outer <code>dir</code> is untouched — this is
+              section-local.
+            </p>
+
+            <div style={{ marginBottom: 12 }}>
+              <button
+                type="button"
+                onClick={() => setS8Dir((d) => (d === "ltr" ? "rtl" : "ltr"))}
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 11,
+                  letterSpacing: "0.05em",
+                  textTransform: "uppercase",
+                  color: "var(--vfx-ink)",
+                  background: "var(--vfx-surface)",
+                  border: "1px solid var(--vfx-rule)",
+                  padding: "8px 14px",
+                  borderRadius: 9999,
+                  cursor: "pointer",
+                }}
+              >
+                Section dir: <strong style={{ color: "var(--vfx-accent)" }}>{s8Dir}</strong>
+                {" "}· click to toggle
+              </button>
+            </div>
+
+            <div
+              dir={s8Dir}
+              style={{
+                background: "var(--vfx-surface)",
+                border: "1px solid var(--vfx-rule)",
+                borderRadius: 2,
+                padding: 20,
+                display: "flex",
+                flexDirection: "column",
+                gap: 14,
+              }}
+            >
+              {/* Row 1 — Lucide ArrowRight, flips */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
+                  padding: "8px 0",
+                  borderBottom: "1px solid var(--vfx-rule)",
+                }}
+              >
+                <ArrowRight
+                  data-rtl-flip
+                  size={22}
+                  strokeWidth={1.8}
+                  style={{ color: "var(--vfx-accent)", flexShrink: 0 }}
+                />
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 2,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: "var(--vfx-ink)",
+                    }}
+                  >
+                    Lucide <code>ArrowRight</code>
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: 10,
+                      letterSpacing: "0.04em",
+                      color: "var(--vfx-muted)",
+                    }}
+                  >
+                    has data-rtl-flip · should mirror
+                  </span>
+                </div>
+              </div>
+
+              {/* Row 2 — Lucide ChevronRight, flips */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
+                  padding: "8px 0",
+                  borderBottom: "1px solid var(--vfx-rule)",
+                }}
+              >
+                <ChevronRight
+                  data-rtl-flip
+                  size={22}
+                  strokeWidth={1.8}
+                  style={{ color: "var(--vfx-accent)", flexShrink: 0 }}
+                />
+                <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <span
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: "var(--vfx-ink)",
+                    }}
+                  >
+                    Lucide <code>ChevronRight</code>
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: 10,
+                      letterSpacing: "0.04em",
+                      color: "var(--vfx-muted)",
+                    }}
+                  >
+                    has data-rtl-flip · should mirror
+                  </span>
+                </div>
+              </div>
+
+              {/* Row 3 — "Acheter →" CTA, only the arrow flips */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
+                  padding: "8px 0",
+                  borderBottom: "1px solid var(--vfx-rule)",
+                }}
+              >
+                <a
+                  href="#"
+                  onClick={(e) => e.preventDefault()}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    color: "var(--vfx-accent)",
+                    borderBottom: "1px solid currentColor",
+                    paddingBottom: 1,
+                    textDecoration: "none",
+                  }}
+                >
+                  Acheter
+                  <ArrowRight data-rtl-flip size={14} strokeWidth={2} />
+                </a>
+                <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <span
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: "var(--vfx-ink)",
+                    }}
+                  >
+                    Inline arrow link
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: 10,
+                      letterSpacing: "0.04em",
+                      color: "var(--vfx-muted)",
+                    }}
+                  >
+                    only the arrow has data-rtl-flip · text stays · visual
+                    order swaps because dir=&quot;rtl&quot; reverses inline flow
+                  </span>
+                </div>
+              </div>
+
+              {/* Row 4 — v-fixer wordmark, NO data-rtl-flip */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
+                  padding: "8px 0",
+                  borderBottom: "1px solid var(--vfx-rule)",
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontSize: 22,
+                    fontWeight: 500,
+                    letterSpacing: "-0.01em",
+                    fontVariationSettings: '"opsz" 22',
+                    color: "var(--vfx-ink)",
+                  }}
+                >
+                  v-fixer<span style={{ color: "var(--vfx-accent)" }}>.</span>
+                </span>
+                <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <span
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: "var(--vfx-ink)",
+                    }}
+                  >
+                    Wordmark
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: 10,
+                      letterSpacing: "0.04em",
+                      color: "var(--vfx-muted)",
+                    }}
+                  >
+                    no data-rtl-flip · must stay unchanged
+                  </span>
+                </div>
+              </div>
+
+              {/* Row 5 — Photo placeholder with asymmetric marker, NO data-rtl-flip */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
+                  padding: "8px 0",
+                }}
+              >
+                <div
+                  style={{
+                    width: 48,
+                    height: 48,
+                    background: "var(--vfx-photo-bg)",
+                    border: "1px solid var(--vfx-rule)",
+                    borderRadius: 2,
+                    position: "relative",
+                    flexShrink: 0,
+                  }}
+                >
+                  {/* Corner marker — top-left "L" so we can see if the box flipped */}
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: 4,
+                      left: 4,
+                      fontFamily: "var(--font-mono)",
+                      fontSize: 10,
+                      fontWeight: 600,
+                      color: "var(--vfx-accent)",
+                    }}
+                  >
+                    L
+                  </span>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <span
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: "var(--vfx-ink)",
+                    }}
+                  >
+                    Photo well with corner marker
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: 10,
+                      letterSpacing: "0.04em",
+                      color: "var(--vfx-muted)",
+                    }}
+                  >
+                    no data-rtl-flip · &quot;L&quot; stays in top-left
+                    regardless of dir
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div
+              style={{
+                marginTop: 16,
+                padding: "12px 14px",
+                background: "var(--vfx-bg)",
+                border: "1px dashed var(--vfx-rule)",
+                fontFamily: "var(--font-mono)",
+                fontSize: 11,
+                color: "var(--vfx-muted)",
+                letterSpacing: "0.04em",
+                lineHeight: 1.55,
+              }}
+            >
+              Note on the &quot;Acheter →&quot; row: in <code>dir=&quot;rtl&quot;</code>{" "}
+              the inline order reverses (so the arrow visually sits left of
+              the text), AND the arrow mirrors (so it now points left). That
+              combination is correct RTL behavior — the CTA still reads
+              &quot;forward toward the destination&quot; in the natural Arabic
+              flow.
             </div>
           </section>
 

@@ -266,6 +266,14 @@
   [dir="rtl"] body {
     font-family: var(--font-arabic);
   }
+  /* Opt-in icon mirroring for RTL. Mark any directional icon (arrows,
+     chevrons, pagination prev/next, gallery prev/next) with the
+     data-rtl-flip attribute and it will mirror horizontally in any
+     subtree where dir="rtl" applies. Single declarative rule —
+     see DESIGN.md "RTL handling" for the apply/skip matrix. */
+  [dir="rtl"] [data-rtl-flip] {
+    transform: scaleX(-1);
+  }
 }
 
 /* ============================================================================
