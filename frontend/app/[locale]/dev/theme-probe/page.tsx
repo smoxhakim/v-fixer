@@ -25,11 +25,14 @@ import {
   Switch,
 } from "@heroui/react";
 import { usePretextHeights } from "@/lib/pretext";
-import { ArrowRight, ChevronRight } from "lucide-react";
+import { CrossFadeStack } from "@/components/ui/cross-fade-stack";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function ThemeProbe() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [s8Dir, setS8Dir] = useState<"ltr" | "rtl">("ltr");
+  const [s9PhotoIdx, setS9PhotoIdx] = useState(0);
+  const [s9SquareIdx, setS9SquareIdx] = useState(0);
   usePretextHeights();
 
   useEffect(() => {
@@ -1410,6 +1413,282 @@ export default function ThemeProbe() {
               combination is correct RTL behavior — the CTA still reads
               &quot;forward toward the destination&quot; in the natural Arabic
               flow.
+            </div>
+          </section>
+
+          {/* CrossFadeStack — M2 step 1 primitive */}
+          <section style={{ marginBottom: 40 }}>
+            <h2
+              style={{
+                fontSize: 11,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: "var(--vfx-muted)",
+                marginBottom: 12,
+              }}
+            >
+              09 · CrossFadeStack (M2 step 1)
+            </h2>
+            <p
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: 11,
+                letterSpacing: "0.04em",
+                color: "var(--vfx-muted)",
+                marginBottom: 14,
+                lineHeight: 1.55,
+              }}
+            >
+              Controlled stack — parent owns activeIndex, one child visible at
+              a time with a 320ms opacity cross-fade (
+              <code>--dur-gallery</code> / <code>--ease-out</code>). Honors{" "}
+              <code>prefers-reduced-motion</code>: the fade becomes instant.
+              Click thumbnails / arrows to swap.
+            </p>
+
+            {/* Demo A — 4/5 product photo with thumbnails */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr",
+                gap: 16,
+                marginBottom: 28,
+                maxWidth: 420,
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 10,
+                  letterSpacing: "0.05em",
+                  textTransform: "uppercase",
+                  color: "var(--vfx-muted)",
+                }}
+              >
+                Demo A · 4/5 product photo · thumbnail switcher
+              </div>
+              <div
+                style={{
+                  border: "1px solid var(--vfx-rule)",
+                  background: "var(--vfx-photo-bg)",
+                }}
+              >
+                <CrossFadeStack
+                  activeIndex={s9PhotoIdx}
+                  aspectRatio="4/5"
+                >
+                  {[
+                    { label: "Photo 1", bg: "#1E5A8A", fg: "#FFFFFF" },
+                    { label: "Photo 2", bg: "#4F6B3A", fg: "#FFFFFF" },
+                    { label: "Photo 3", bg: "#8B6F47", fg: "#FFFFFF" },
+                  ].map((p) => (
+                    <div
+                      key={p.label}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        background: p.bg,
+                        color: p.fg,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontFamily: "var(--font-display)",
+                        fontSize: 32,
+                        fontWeight: 500,
+                        letterSpacing: "-0.01em",
+                      }}
+                    >
+                      {p.label}
+                    </div>
+                  ))}
+                </CrossFadeStack>
+              </div>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(3, 1fr)",
+                  gap: 8,
+                }}
+              >
+                {[0, 1, 2].map((i) => {
+                  const isActive = i === s9PhotoIdx;
+                  const colors = ["#1E5A8A", "#4F6B3A", "#8B6F47"];
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setS9PhotoIdx(i)}
+                      aria-label={`Show photo ${i + 1}`}
+                      aria-pressed={isActive}
+                      style={{
+                        aspectRatio: "1 / 1",
+                        background: colors[i],
+                        color: "#FFFFFF",
+                        border: isActive
+                          ? "2px solid var(--vfx-accent)"
+                          : "1px solid var(--vfx-rule)",
+                        borderRadius: 2,
+                        outlineOffset: 2,
+                        cursor: "pointer",
+                        fontFamily: "var(--font-mono)",
+                        fontSize: 11,
+                        fontWeight: 600,
+                        opacity: isActive ? 1 : 0.55,
+                        transition: "opacity 150ms ease, border-color 150ms ease",
+                      }}
+                    >
+                      {i + 1}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Demo B — 1/1 square with arrow navigation */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr",
+                gap: 12,
+                maxWidth: 360,
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 10,
+                  letterSpacing: "0.05em",
+                  textTransform: "uppercase",
+                  color: "var(--vfx-muted)",
+                }}
+              >
+                Demo B · 1/1 square · arrow navigation (4 frames)
+              </div>
+              <div
+                style={{
+                  border: "1px solid var(--vfx-rule)",
+                  background: "var(--vfx-photo-bg)",
+                }}
+              >
+                <CrossFadeStack
+                  activeIndex={s9SquareIdx}
+                  aspectRatio="1/1"
+                >
+                  {[
+                    { label: "A", bg: "#1E5A8A" },
+                    { label: "B", bg: "#4F6B3A" },
+                    { label: "C", bg: "#8B6F47" },
+                    { label: "D", bg: "#8A2A2A" },
+                  ].map((f) => (
+                    <div
+                      key={f.label}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        background: f.bg,
+                        color: "#FFFFFF",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontFamily: "var(--font-display)",
+                        fontSize: 80,
+                        fontWeight: 500,
+                      }}
+                    >
+                      {f.label}
+                    </div>
+                  ))}
+                </CrossFadeStack>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() =>
+                    setS9SquareIdx((i) => (i - 1 + 4) % 4)
+                  }
+                  aria-label="Previous frame"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "8px 14px",
+                    background: "var(--vfx-surface)",
+                    color: "var(--vfx-ink)",
+                    border: "1px solid var(--vfx-rule)",
+                    borderRadius: 2,
+                    fontFamily: "var(--font-mono)",
+                    fontSize: 11,
+                    letterSpacing: "0.04em",
+                    textTransform: "uppercase",
+                    cursor: "pointer",
+                  }}
+                >
+                  <ChevronLeft data-rtl-flip size={14} strokeWidth={2} />
+                  Prev
+                </button>
+                <span
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: 12,
+                    color: "var(--vfx-muted)",
+                    fontFeatureSettings: '"tnum" on',
+                  }}
+                >
+                  {s9SquareIdx + 1} / 4
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setS9SquareIdx((i) => (i + 1) % 4)}
+                  aria-label="Next frame"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "8px 14px",
+                    background: "var(--vfx-surface)",
+                    color: "var(--vfx-ink)",
+                    border: "1px solid var(--vfx-rule)",
+                    borderRadius: 2,
+                    fontFamily: "var(--font-mono)",
+                    fontSize: 11,
+                    letterSpacing: "0.04em",
+                    textTransform: "uppercase",
+                    cursor: "pointer",
+                  }}
+                >
+                  Next
+                  <ChevronRight data-rtl-flip size={14} strokeWidth={2} />
+                </button>
+              </div>
+            </div>
+
+            <div
+              style={{
+                marginTop: 16,
+                padding: "12px 14px",
+                background: "var(--vfx-bg)",
+                border: "1px dashed var(--vfx-rule)",
+                fontFamily: "var(--font-mono)",
+                fontSize: 11,
+                color: "var(--vfx-muted)",
+                letterSpacing: "0.04em",
+                lineHeight: 1.55,
+              }}
+            >
+              Verify: (a) click any thumbnail / arrow — the active panel
+              cross-fades over ~320ms with no layout shift; (b) inactive
+              panels are pointer-events:none (clicks pass through to the
+              active one); (c) DevTools &rarr; Rendering &rarr; Emulate{" "}
+              <code>prefers-reduced-motion: reduce</code> &mdash; subsequent
+              swaps are instant. Real product photos arrive in M3; placeholder
+              colored panels here are intentional.
             </div>
           </section>
 
