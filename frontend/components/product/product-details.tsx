@@ -16,7 +16,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { formatCurrency } from "@/lib/format";
 import { useCart } from "@/context/cart-context";
-import type { Product } from "@/data/products";
+import type { Product } from "@/lib/api";
 import { resolveMediaSrc } from "@/lib/media-url";
 
 export function ProductDetails({ product }: { product: Product }) {

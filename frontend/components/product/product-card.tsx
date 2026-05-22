@@ -17,7 +17,7 @@ import { Chip } from "@heroui/react";
 
 import { formatCurrency } from "@/lib/format";
 import { useCart } from "@/context/cart-context";
-import type { Product } from "@/data/products";
+import type { Product } from "@/lib/api";
 import { resolveMediaSrc } from "@/lib/media-url";
 
 /* Tuning */

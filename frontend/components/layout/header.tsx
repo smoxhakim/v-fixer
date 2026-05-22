@@ -28,7 +28,7 @@ import {
 
 import { useCart } from "@/context/cart-context";
 import { useAdminToken } from "@/hooks/use-admin-token";
-import { getCategories } from "@/lib/api";
+import { getCategories, type Category } from "@/lib/api";
 import {
   readRecentSearchKeywords,
   rememberSearchKeyword,
@@ -48,9 +48,7 @@ export function Header() {
   const { token, hydrated } = useAdminToken();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [categories, setCategories] = useState<
-    { id: string; name: string; slug: string }[]
-  >([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [recentKeywords, setRecentKeywords] = useState<string[]>([]);
 
   const navLinks = [

@@ -5,15 +5,6 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getCategories } from "@/lib/api";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
-import { resolveMediaSrc } from "@/lib/media-url";
-
-type StoreCategory = {
-  id: string | number;
-  name: string;
-  slug: string;
-  image_url?: string | null;
-  imageUrl?: string | null;
-};
 
 const PLACEHOLDER_GRADIENTS = [
   "from-sky-200/50 via-blue-100/40 to-indigo-200/60",
@@ -43,7 +34,7 @@ export default async function CategoriesPage({
   setRequestLocale(locale);
   const t = await getTranslations("CategoriesIndex");
   const tCat = await getTranslations("CategoryPage");
-  const categories = (await getCategories()) as StoreCategory[];
+  const categories = await getCategories();
 
   return (
     <div className="min-h-screen bg-background">
@@ -66,9 +57,8 @@ export default async function CategoriesPage({
         ) : (
           <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {categories.map((cat, index) => {
-              const raw = cat.imageUrl ?? cat.image_url;
-              const imgSrc =
-                typeof raw === "string" && raw.trim() ? resolveMediaSrc(raw.trim()) : "";
+              // normalizeCategory already resolved the media URL at the wire boundary
+              const imgSrc = cat.imageUrl ?? "";
               const ph = PLACEHOLDER_GRADIENTS[index % PLACEHOLDER_GRADIENTS.length];
               return (
                 <li key={String(cat.id)}>

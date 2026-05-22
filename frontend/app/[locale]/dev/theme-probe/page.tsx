@@ -182,10 +182,10 @@ export default function ThemeProbe() {
             </h2>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
               <Button color="primary">Ajouter au panier</Button>
-              <Button color="primary" variant="bordered">
+              <Button color="primary" variant="outline">
                 Comparer
               </Button>
-              <Button color="primary" variant="light">
+              <Button color="primary" variant="ghost">
                 Favoris
               </Button>
               <Button color="default">Default</Button>
