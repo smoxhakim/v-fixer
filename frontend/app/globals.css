@@ -168,6 +168,53 @@
   --sidebar-ring:                     var(--vfx-accent);
 }
 
+/* ============================================================================
+   v-fixer · DESIGN.md motion tokens (M2 step 1.5)
+   ============================================================================
+   Theme-independent: motion does not change between light and dark, so these
+   live in a single :root block rather than being duplicated into .dark.
+   Values are the exact set in DESIGN.md → Motion → Tokens. The unprefixed
+   aliases (--ease-out, --dur-gallery, …) match DESIGN.md verbatim so the
+   "Allowed motion" table maps 1:1 to CSS. Components should reference the
+   unprefixed aliases — they're the public API of the motion system.
+   ============================================================================ */
+:root {
+  /* Canonical (vfx-prefixed) */
+  --vfx-ease-out:    cubic-bezier(0.2, 0, 0, 1);     /* enter, primary motion */
+  --vfx-ease-in:     cubic-bezier(0.4, 0, 1, 1);     /* exit */
+  --vfx-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);   /* state-to-state */
+
+  --vfx-dur-micro:   100ms;   /* state acks, ticks */
+  --vfx-dur-short:   150ms;   /* card hover, input focus */
+  --vfx-dur-card:    180ms;   /* add-to-cart label swap, cart-count pulse */
+  --vfx-dur-page:    240ms;   /* page transitions */
+  --vfx-dur-gallery: 320ms;   /* PDP image gallery cross-fade */
+
+  /* Public aliases — match DESIGN.md names exactly. Components use these. */
+  --ease-out:    var(--vfx-ease-out);
+  --ease-in:     var(--vfx-ease-in);
+  --ease-in-out: var(--vfx-ease-in-out);
+
+  --dur-micro:   var(--vfx-dur-micro);
+  --dur-short:   var(--vfx-dur-short);
+  --dur-card:    var(--vfx-dur-card);
+  --dur-page:    var(--vfx-dur-page);
+  --dur-gallery: var(--vfx-dur-gallery);
+}
+
+/* DESIGN.md mandate: prefers-reduced-motion collapses every duration to 0ms.
+   Overriding the canonical --vfx-dur-* tokens is enough; the unprefixed
+   aliases re-resolve through var() automatically. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --vfx-dur-micro:   0ms;
+    --vfx-dur-short:   0ms;
+    --vfx-dur-card:    0ms;
+    --vfx-dur-page:    0ms;
+    --vfx-dur-gallery: 0ms;
+  }
+}
+
 @theme inline {
   /* ----------------------------------------------------------------------
      Typography aliases — canonical names consumed by components.

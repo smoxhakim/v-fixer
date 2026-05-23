@@ -1692,6 +1692,140 @@ export default function ThemeProbe() {
             </div>
           </section>
 
+          {/* Motion duration scale — visible specimen of all 5 --dur-* tokens */}
+          <section style={{ marginBottom: 40 }}>
+            <h2
+              style={{
+                fontSize: 11,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: "var(--vfx-muted)",
+                marginBottom: 12,
+              }}
+            >
+              09b · Motion duration scale (M2 step 1.5)
+            </h2>
+            <p
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: 11,
+                letterSpacing: "0.04em",
+                color: "var(--vfx-muted)",
+                marginBottom: 14,
+                lineHeight: 1.55,
+              }}
+            >
+              Five duration tokens from DESIGN.md, all wired to{" "}
+              <code>--vfx-dur-*</code> in <code>globals.css</code>. Hover any
+              box — background shifts from surface to accent over that
+              token&apos;s duration with <code>--ease-out</code>. The 100ms
+              tick is barely visible; 320ms feels deliberate. Under{" "}
+              <code>prefers-reduced-motion: reduce</code> all five collapse
+              to 0ms.
+            </p>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(5, 1fr)",
+                gap: 12,
+                maxWidth: 720,
+              }}
+            >
+              {[
+                { name: "micro",   token: "--dur-micro",   ms: "100ms" },
+                { name: "short",   token: "--dur-short",   ms: "150ms" },
+                { name: "card",    token: "--dur-card",    ms: "180ms" },
+                { name: "page",    token: "--dur-page",    ms: "240ms" },
+                { name: "gallery", token: "--dur-gallery", ms: "320ms" },
+              ].map((d) => (
+                <div
+                  key={d.name}
+                  className="probe-motion-box"
+                  data-dur={d.token}
+                  style={{
+                    aspectRatio: "1 / 1",
+                    background: "var(--vfx-surface)",
+                    color: "var(--vfx-ink)",
+                    border: "1px solid var(--vfx-rule)",
+                    borderRadius: 2,
+                    padding: 12,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: 11,
+                    cursor: "pointer",
+                    transition: `background-color var(${d.token}) var(--ease-out), color var(${d.token}) var(--ease-out)`,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "var(--vfx-accent)";
+                    e.currentTarget.style.color = "#FFFFFF";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "var(--vfx-surface)";
+                    e.currentTarget.style.color = "var(--vfx-ink)";
+                  }}
+                >
+                  <div
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: 20,
+                      fontWeight: 500,
+                      letterSpacing: "-0.01em",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {d.ms}
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 2,
+                    }}
+                  >
+                    <span
+                      style={{
+                        letterSpacing: "0.05em",
+                        textTransform: "uppercase",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {d.name}
+                    </span>
+                    <span style={{ fontSize: 9, opacity: 0.75 }}>
+                      {d.token}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div
+              style={{
+                marginTop: 16,
+                padding: "12px 14px",
+                background: "var(--vfx-bg)",
+                border: "1px dashed var(--vfx-rule)",
+                fontFamily: "var(--font-mono)",
+                fontSize: 11,
+                color: "var(--vfx-muted)",
+                letterSpacing: "0.04em",
+                lineHeight: 1.55,
+              }}
+            >
+              Easings (also wired): <code>--ease-out</code>{" "}
+              <code style={{ color: "var(--vfx-accent)" }}>cubic-bezier(0.2, 0, 0, 1)</code>{" "}
+              · <code>--ease-in</code>{" "}
+              <code style={{ color: "var(--vfx-accent)" }}>cubic-bezier(0.4, 0, 1, 1)</code>{" "}
+              · <code>--ease-in-out</code>{" "}
+              <code style={{ color: "var(--vfx-accent)" }}>cubic-bezier(0.4, 0, 0.2, 1)</code>.
+              Every primitive from M2 onwards should consume these by name —
+              no hardcoded ms or cubic-bezier values.
+            </div>
+          </section>
+
           {/* Findings note */}
           <section
             style={{

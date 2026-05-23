@@ -1,56 +1,42 @@
 "use client";
 
 /**
- * CrossFadeStack — M2 step 1 (2026-05-22).
+ * CrossFadeStack — M2 step 1 (2026-05-22), tokens wired M2 step 1.5.
  *
  * Controlled stack: parent owns activeIndex, this component renders exactly
  * one of N children at a time with a smooth opacity cross-fade. Built for
  * the M2 HeroSpread (homepage product spread) and the PDP image gallery.
  *
- * Defaults track DESIGN.md tokens: 320ms / cubic-bezier(0.2, 0, 0, 1)
- * (--dur-gallery / --ease-out). Honors prefers-reduced-motion by collapsing
- * the transition to 0ms (instant swap, no fade).
+ * Defaults reference DESIGN.md tokens via CSS var() with literal fallbacks
+ * for SSR safety: --dur-gallery (320ms) and --ease-out
+ * (cubic-bezier(0.2, 0, 0, 1)). The fallback only ever appears if globals.css
+ * hasn't loaded — under normal operation the tokens win.
+ *
+ * prefers-reduced-motion is handled entirely in CSS: the @media block in
+ * globals.css collapses every --vfx-dur-* to 0ms, which propagates through
+ * the aliases consumed here. No JS detection needed.
  *
  * SSR-safe: the active child is opacity 1 from the very first render — no
  * useEffect gate, no flicker. The transition only fires on activeIndex
  * changes after hydration.
  */
 
-import {
-  Children,
-  type CSSProperties,
-  type ReactNode,
-  useEffect,
-  useState,
-} from "react";
+import { Children, type CSSProperties, type ReactNode } from "react";
 
 export interface CrossFadeStackProps {
   children: ReactNode[];
   activeIndex: number;
-  /** Fade duration in ms. Default 320ms (DESIGN.md --dur-gallery). */
-  duration?: number;
-  /** CSS easing. Default cubic-bezier(0.2, 0, 0, 1) (DESIGN.md --ease-out). */
+  /** Fade duration as a CSS time value. Default reads --dur-gallery (320ms). */
+  duration?: string;
+  /** CSS easing. Default reads --ease-out (cubic-bezier(0.2, 0, 0, 1)). */
   easing?: string;
   /** Recommended — prevents layout shift. Examples: "4/5", "1/1", "16/9". */
   aspectRatio?: string;
   className?: string;
 }
 
-const DEFAULT_DURATION = 320;
-const DEFAULT_EASING = "cubic-bezier(0.2, 0, 0, 1)";
-
-function usePrefersReducedMotion() {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.matchMedia) return;
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduced(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setReduced(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-  return reduced;
-}
+const DEFAULT_DURATION = "var(--dur-gallery, 320ms)";
+const DEFAULT_EASING = "var(--ease-out, cubic-bezier(0.2, 0, 0, 1))";
 
 export function CrossFadeStack({
   children,
@@ -61,8 +47,6 @@ export function CrossFadeStack({
   className,
 }: CrossFadeStackProps) {
   const items = Children.toArray(children);
-  const reducedMotion = usePrefersReducedMotion();
-  const effectiveDuration = reducedMotion ? 0 : duration;
 
   if (process.env.NODE_ENV !== "production") {
     if (items.length === 0) {
@@ -92,8 +76,8 @@ export function CrossFadeStack({
           pointerEvents: isActive ? "auto" : "none",
           transform: "translateZ(0)",
           transition: isActive
-            ? `opacity ${effectiveDuration}ms ${easing}, visibility 0s 0s`
-            : `opacity ${effectiveDuration}ms ${easing}, visibility 0s ${effectiveDuration}ms`,
+            ? `opacity ${duration} ${easing}, visibility 0s 0s`
+            : `opacity ${duration} ${easing}, visibility 0s ${duration}`,
           willChange: "opacity",
         };
         return (
