@@ -29,7 +29,15 @@
     "signIn": "تسجيل الدخول",
     "viewStore": "المتجر",
     "switchToAr": "العربية",
-    "switchToFr": "FR"
+    "switchToFr": "FR",
+    "topBarSearchPlaceholder": "ابحث عن مرجع أو علامة تجارية أو فئة…",
+    "topBarPanier": "السلة",
+    "topBarTheme": "المظهر",
+    "topBarThemeAria": "تبديل المظهر فاتح/داكن",
+    "topBarCartLabel": "عرض السلة، {count} عناصر",
+    "topBarLangLabel": "تغيير اللغة، النشطة: {current}",
+    "topBarLangFr": "الفرنسية",
+    "topBarLangAr": "العربية"
   },
   "Footer": {
     "tagline": "متجرك للتقنية الحديثة. جودة عالية، توصيل سريع ودعم ممتاز.",

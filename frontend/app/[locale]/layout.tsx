@@ -6,7 +6,9 @@ import { Analytics } from "@vercel/analytics/next";
 
 import { CartProvider } from "@/context/cart-context";
 import { Footer } from "@/components/layout/footer";
-import { Header } from "@/components/layout/header";
+// M2 step 2: TopBar replaces the legacy Header. The old file stays on disk
+// for one commit so the diff stays reviewable; remove in the next pass.
+import { TopBar } from "@/components/layout/top-bar";
 import { HeroUIProviderWithIntlRouter } from "@/components/heroui-provider-with-intl-router";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -49,7 +51,7 @@ export default async function LocaleLayout({
         <HeroUIProviderWithIntlRouter locale={locale}>
           <CartProvider>
             <div className="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden">
-              <Header />
+              <TopBar />
               <main className="w-full flex-1 overflow-x-hidden">{children}</main>
               <Footer />
             </div>
