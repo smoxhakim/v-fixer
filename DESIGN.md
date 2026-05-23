@@ -136,6 +136,12 @@ font-variation-settings: "opsz" <size>, "SOFT" 30;
   - **HeroUI defaults survive for "primitives that are conceptually round":** Chip (brand chips like "MAGMA" stay pill-shaped — HeroUI's `rounded-[20px]`), Avatar (round by default — correct), Switch (slider physical metaphor — correct), Skeleton (matches the primitive it's standing in for).
   - **9999px (explicit) for "anything that's literally a circle by intent":** cart-count badge in the top bar, in-stock / low-stock / out-stock dots, mobile language toggle pill, dot-nav indicators on the hero spread.
   - **0px** on ruled rows, table cells, image-well dividers, photo well containers inside Cards (photos read true against hairline edges, not curves).
+
+- **Chip variant vocabulary (HeroUI v3 mapping):**
+  - **`variant="primary"`** — solid filled chip (e.g. REF badges in `accent`). High-attention identifiers.
+  - **`variant="soft"`** — muted tinted background. Used for tags / facets / non-status metadata (e.g. brand chips like "Magma · C115").
+  - **`variant="tertiary"`** — transparent background, colored text only. Default for muted detail.
+  - **Stock-status chips (in-stock / low-stock / out-of-stock) are a tertiary + bordered exception.** They use `variant="tertiary"` with the `data-stock="in|low|out"` attribute, which adds a 1px solid currentColor border via the rule in `globals.css`. The border distinguishes "operational status badge" from soft (tag) and from plain tertiary (muted detail) — this visual signature is load-bearing in the catalog vocabulary. **Do not extend the border to other tertiary chips.** Apply `data-stock` only to actual stock status badges.
 - **Elevation:** hairline rules (`--rule`) + ink-weight changes. **Zero drop shadows. Zero glow.**
 - **Hairlines:** 1px solid in `--rule`. On retina, 0.5px is acceptable but never decorative.
 

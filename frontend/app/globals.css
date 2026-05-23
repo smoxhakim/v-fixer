@@ -350,4 +350,19 @@
   .card {
     border-radius: 2px;
   }
+
+  /* ----------------------------------------------------------------------
+     Stock-status chip border (DESIGN.md exception, M2 step 2.5).
+     ----------------------------------------------------------------------
+     HeroUI v3 dropped the v2 `bordered` chip variant, but DESIGN.md
+     deliberately uses a bordered look for operational stock badges
+     (in-stock / low-stock / out-of-stock) — the border distinguishes
+     "operational status" from "tag" (soft) and "muted detail" (text-only
+     tertiary). Opt-in via data-stock; do NOT apply to every tertiary
+     chip. currentColor inherits the chip's foreground (sage / sand /
+     red) so the border matches the text automatically.
+     ---------------------------------------------------------------------- */
+  .chip[data-stock] {
+    border: 1px solid currentColor;
+  }
 }

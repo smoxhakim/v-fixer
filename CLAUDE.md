@@ -85,6 +85,9 @@ For the duration of the migration, all new dev/internal tooling pages follow thi
 - HeroUI v3 has **no** `HeroUIProvider`. Theme tokens flow through CSS cascade only (`@import '@heroui/styles'` + `:root` / `.dark` variable overrides). There is no Tailwind plugin config.
 - HeroUI v3's `DropdownTrigger` **is** a Button. Don't wrap a `<Button>` inside it — pass `variant` / `className` directly to `DropdownTrigger`.
 - HeroUI v3 renames: `CardBody` → `CardContent`.
+- HeroUI v3 has a broken type chain for `Button`, `Switch`, `Input` (and likely others). They wrap react-aria primitives via `ComponentPropsWithRef<typeof X>`, but react-aria types those primitives as callable signatures `(props) => Element | null` instead of `ForwardRefExoticComponent`. TypeScript can't recover `children`, `isSelected`, `placeholder`, etc. from a callable signature, so the wrapped `.d.ts` files drop those props even though the runtime accepts them. Workaround: local adapter components (`Btn`, `Switcher`) that cast through `unknown` to re-add the missing prop shapes. See `app/[locale]/dev/theme-probe/page.tsx` for an example. Reuse the same `Btn` / `Switcher` pattern for new consumers; remove all adapters once HeroUI ships a proper `ForwardRefExoticComponent` typing.
+- HeroUI v3 Button has **no `color` prop** — only `variant`. Available variants: `primary | secondary | tertiary | outline | ghost | danger | danger-soft`. There is no success/warning Button; use a Chip for status semantics.
+- HeroUI v3 Chip variant set changed: v2 `bordered` → use `tertiary` (transparent bg, colored text); v2 `flat` → use `soft` (muted tint). The v2 "bordered" outline is gone — for stock-status chips that DESIGN.md requires bordered, add the `data-stock="in|low|out"` attribute (a globals.css rule adds `1px solid currentColor`). Do not extend the border to other tertiary chips.
 
 ## gstack
 

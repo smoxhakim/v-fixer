@@ -11,7 +11,7 @@
  * layout. Light/dark toggle attaches `dark` class to <html>.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ComponentProps, type FC, type ReactNode } from "react";
 import {
   Avatar,
   Button,
@@ -21,12 +21,36 @@ import {
   CardFooter,
   Chip,
   I18nProvider,
-  Input,
   Switch,
 } from "@heroui/react";
 import { usePretextHeights } from "@/lib/pretext";
 import { CrossFadeStack } from "@/components/ui/cross-fade-stack";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+
+/* ----------------------------------------------------------------------
+   HeroUI v3 typed adapters
+   ----------------------------------------------------------------------
+   HeroUI v3 wraps react-aria primitives via `ComponentPropsWithRef<typeof
+   X>`, but react-aria types Button/Switch/Input as plain callable signatures
+   (`(props) => ReactElement | null`) rather than `ForwardRefExoticComponent`.
+   TS can't recover children/isSelected/placeholder from that — so the .d.ts
+   surface drops props the runtime actually destructures (verified by
+   inspecting button.d.ts: `({ children, ...rest }: ButtonRootProps)`).
+   We re-add the missing prop shapes here so the probe stays type-safe.
+   Track upstream — when HeroUI ships a wrapped `forwardRef` typing or
+   re-exports proper props, delete these adapters and import directly. */
+type BtnProps = ComponentProps<typeof Button> & {
+  children?: ReactNode;
+  onPress?: () => void;
+};
+const Btn = Button as unknown as FC<BtnProps>;
+
+type Sw = ComponentProps<typeof Switch> & {
+  isSelected?: boolean;
+  defaultSelected?: boolean;
+  onChange?: (selected: boolean) => void;
+};
+const Switcher = Switch as unknown as FC<Sw>;
 
 export default function ThemeProbe() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -181,20 +205,19 @@ export default function ThemeProbe() {
                 marginBottom: 12,
               }}
             >
-              02 · HeroUI Button (color=&quot;primary&quot;)
+              02 · HeroUI Button (v3 variants)
             </h2>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-              <Button color="primary">Ajouter au panier</Button>
-              <Button color="primary" variant="outline">
-                Comparer
-              </Button>
-              <Button color="primary" variant="ghost">
-                Favoris
-              </Button>
-              <Button color="default">Default</Button>
-              <Button color="success">In stock</Button>
-              <Button color="warning">Low stock</Button>
-              <Button color="danger">Out of stock</Button>
+              {/* v3 Button has no `color` prop — variant encodes both look
+                  and intent. The seven variants below are the entire surface
+                  exposed by @heroui/styles → button.styles.js. */}
+              <Btn variant="primary">Ajouter au panier</Btn>
+              <Btn variant="secondary">Secondary</Btn>
+              <Btn variant="tertiary">Tertiary</Btn>
+              <Btn variant="outline">Outline</Btn>
+              <Btn variant="ghost">Ghost</Btn>
+              <Btn variant="danger">Out of stock</Btn>
+              <Btn variant="danger-soft">Soft danger</Btn>
             </div>
           </section>
 
@@ -218,17 +241,24 @@ export default function ThemeProbe() {
                 alignItems: "center",
               }}
             >
-              <Chip color="primary">REF · AIFEN-A902PRO</Chip>
-              <Chip color="success" variant="bordered">
+              {/* v2 → v3 Chip mapping (apply consistently across sections):
+                    color="primary"      → color="accent"        (DESIGN.md blueprint blue)
+                    variant="bordered"   → variant="tertiary"    (transparent bg + colored text; no border in v3)
+                    variant="flat"       → variant="soft"        (muted tinted background)
+                    no variant + solid   → variant="primary"     (solid filled chip) */}
+              <Chip color="accent" variant="primary">REF · AIFEN-A902PRO</Chip>
+              {/* Stock-status chips: tertiary variant + data-stock opt-in
+                  border (DESIGN.md exception — see globals.css chip rule). */}
+              <Chip color="success" variant="tertiary" data-stock="in">
                 42 en stock
               </Chip>
-              <Chip color="warning" variant="bordered">
+              <Chip color="warning" variant="tertiary" data-stock="low">
                 2 en stock · bientôt rupture
               </Chip>
-              <Chip color="danger" variant="bordered">
+              <Chip color="danger" variant="tertiary" data-stock="out">
                 Rupture
               </Chip>
-              <Chip color="default" variant="flat">
+              <Chip color="default" variant="soft">
                 Magma · C115
               </Chip>
             </div>
@@ -310,7 +340,7 @@ export default function ThemeProbe() {
                   >
                     3 800,00 MAD
                   </div>
-                  <Chip color="success" variant="bordered" size="sm">
+                  <Chip color="success" variant="tertiary" size="sm" data-stock="in">
                     3 en stock
                   </Chip>
                 </CardFooter>
@@ -372,9 +402,9 @@ export default function ThemeProbe() {
                   >
                     280,00 MAD
                   </div>
-                  <Button color="primary" size="sm">
+                  <Btn variant="primary" size="sm">
                     Ajouter
-                  </Button>
+                  </Btn>
                 </CardFooter>
               </Card>
             </div>
@@ -416,8 +446,26 @@ export default function ThemeProbe() {
                   alignItems: "center",
                 }}
               >
-                <Button color="primary">Button</Button>
-                <Input placeholder="Input" style={{ width: 180 }} />
+                <Btn variant="primary">Button</Btn>
+                {/* Plain <input className="input"> — HeroUI v3's Input.d.ts
+                    drops `placeholder` (same `ComponentPropsWithRef` issue as
+                    Button). For an internal probe demonstrating that
+                    .input { border-radius: 2px } applies, a native input
+                    with the class is simpler than wrapping in an adapter. */}
+                <input
+                  className="input"
+                  placeholder="Input"
+                  style={{
+                    width: 180,
+                    background: "var(--vfx-surface)",
+                    border: "1px solid var(--vfx-rule)",
+                    color: "var(--vfx-ink)",
+                    padding: "8px 12px",
+                    fontFamily: "var(--font-body)",
+                    fontSize: 13,
+                    outline: "none",
+                  }}
+                />
                 <Card style={{ padding: "10px 14px", minWidth: 140 }}>
                   <span style={{ fontSize: 13 }}>Card</span>
                 </Card>
@@ -446,12 +494,12 @@ export default function ThemeProbe() {
                   alignItems: "center",
                 }}
               >
-                <Chip color="primary">Chip (pill)</Chip>
-                <Chip color="success" variant="bordered">
+                <Chip color="accent" variant="primary">Chip (pill)</Chip>
+                <Chip color="success" variant="tertiary">
                   42 en stock
                 </Chip>
                 <Avatar name="MT" />
-                <Switch defaultSelected />
+                <Switcher defaultSelected />
               </div>
             </div>
 
