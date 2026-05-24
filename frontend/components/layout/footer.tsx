@@ -25,7 +25,7 @@ export async function Footer() {
           <div>
             <Link href="/" className="inline-block mb-4">
               <span className="text-2xl font-black tracking-tight">
-                <span className="text-warning">V-</span>fixer
+                <span className="text-primary">V-</span>fixer
               </span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed">
@@ -38,7 +38,7 @@ export async function Footer() {
                   key={label}
                   href={href}
                   aria-label={label}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-colors hover:border-warning hover:text-warning"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-colors hover:border-primary hover:text-primary"
                 >
                   <Icon className="h-4 w-4" />
                 </a>
@@ -63,7 +63,7 @@ export async function Footer() {
                 <li key={cat.id}>
                   <Link
                     href={`/category/${cat.slug}`}
-                    className="text-sm text-foreground/80 hover:text-warning transition-colors"
+                    className="text-sm text-foreground/80 hover:text-primary transition-colors"
                   >
                     {cat.name}
                   </Link>
@@ -78,22 +78,22 @@ export async function Footer() {
               {t("information")}
             </h3>
             <ul className="flex flex-col gap-2 text-sm text-foreground/80">
-              <li className="cursor-pointer hover:text-warning transition-colors">
+              <li className="cursor-pointer hover:text-primary transition-colors">
                 {t("about")}
               </li>
-              <li className="cursor-pointer hover:text-warning transition-colors">
+              <li className="cursor-pointer hover:text-primary transition-colors">
                 {t("contact")}
               </li>
-              <li className="cursor-pointer hover:text-warning transition-colors">
+              <li className="cursor-pointer hover:text-primary transition-colors">
                 {t("terms")}
               </li>
-              <li className="cursor-pointer hover:text-warning transition-colors">
+              <li className="cursor-pointer hover:text-primary transition-colors">
                 {t("returns")}
               </li>
-              <li className="cursor-pointer hover:text-warning transition-colors">
+              <li className="cursor-pointer hover:text-primary transition-colors">
                 {t("shipping")}
               </li>
-              <li className="cursor-pointer hover:text-warning transition-colors">
+              <li className="cursor-pointer hover:text-primary transition-colors">
                 {t("privacy")}
               </li>
             </ul>
