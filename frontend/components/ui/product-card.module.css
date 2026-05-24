@@ -1,0 +1,126 @@
+/* ProductCard — M2 step 3.
+   Co-located with product-card.tsx. The hover state is the only thing
+   we genuinely can't do via inline style (no `:hover` pseudo), and the
+   stock-dot color is keyed off a data attribute. Everything else stays
+   inline because it's static per-instance and easier to grep. */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  background: var(--vfx-surface);
+  border: 1px solid var(--vfx-rule);
+  border-radius: 2px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: background-color var(--dur-short) var(--ease-out);
+}
+
+.card:hover {
+  background: var(--vfx-surface-2);
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--vfx-accent);
+  outline-offset: 2px;
+}
+
+.imgWell {
+  position: relative;
+  background: var(--vfx-photo-bg);
+  border-bottom: 1px solid var(--vfx-rule);
+  overflow: hidden;
+}
+
+/* Photo padding keeps the product clear of the well's hairline edge. */
+.imgWell img {
+  padding: 12px;
+}
+
+.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 500;
+  color: var(--vfx-muted);
+  letter-spacing: -0.01em;
+}
+
+.body {
+  padding: 12px 14px 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.ref {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--vfx-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin-top: 6px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--vfx-ink);
+  line-height: 1.35;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.priceRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.price {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--vfx-accent);
+  font-feature-settings: "tnum" on;
+  white-space: nowrap;
+}
+
+.priceWas {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--vfx-muted);
+  text-decoration: line-through;
+  font-feature-settings: "tnum" on;
+}
+
+.stockRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--vfx-muted);
+  letter-spacing: 0.04em;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.dot[data-state="in"]  { background: var(--vfx-in-stock); }
+.dot[data-state="low"] { background: var(--vfx-low-stock); }
+.dot[data-state="out"] { background: var(--vfx-out-stock); }

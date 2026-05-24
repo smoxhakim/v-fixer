@@ -25,7 +25,56 @@ import {
 } from "@heroui/react";
 import { usePretextHeights } from "@/lib/pretext";
 import { CrossFadeStack } from "@/components/ui/cross-fade-stack";
+import { ProductCard } from "@/components/ui/product-card";
+import type { Product } from "@/lib/api";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+
+/* Mock products for the section 10 ProductCard demo. Real Product type
+   shape — keeps the probe honest and forces us to handle every required
+   field, including the no-image placeholder path. */
+const S10_PRODUCTS: Product[] = [
+  {
+    id: 1,
+    name: "Station de soudage Aifen A902 Pro — 2 fers et 9 pannes Magma incluses",
+    slug: "aifen-a902pro",
+    price: 4200,
+    discountPrice: 3800,
+    rating: 0,
+    images: [],
+    specs: [],
+    stock: 3,
+  },
+  {
+    id: 2,
+    name: "Panne Magma C115-K",
+    slug: "magma-c115-k",
+    price: 95,
+    rating: 0,
+    images: [],
+    specs: [],
+    stock: 42,
+  },
+  {
+    id: 3,
+    name: "Microscope trinoculaire Kaisi TX-350E avec bras articulé MRS-1",
+    slug: "kaisi-tx350e",
+    price: 4500,
+    rating: 0,
+    images: [],
+    specs: [],
+    stock: 0,
+  },
+  {
+    id: 4,
+    name: "Tresse à dessouder Goot CP-1515",
+    slug: "goot-cp1515",
+    price: 95,
+    rating: 0,
+    images: [],
+    specs: [],
+    stock: 18,
+  },
+];
 
 /* ----------------------------------------------------------------------
    HeroUI v3 typed adapters
@@ -1871,6 +1920,81 @@ export default function ThemeProbe() {
               <code style={{ color: "var(--vfx-accent)" }}>cubic-bezier(0.4, 0, 0.2, 1)</code>.
               Every primitive from M2 onwards should consume these by name —
               no hardcoded ms or cubic-bezier values.
+            </div>
+          </section>
+
+          {/* ProductCard primitive — M2 step 3 */}
+          <section style={{ marginBottom: 40 }}>
+            <h2
+              style={{
+                fontSize: 11,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: "var(--vfx-muted)",
+                marginBottom: 12,
+              }}
+            >
+              10 · ProductCard (M2 step 3)
+            </h2>
+            <p
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: 11,
+                letterSpacing: "0.04em",
+                color: "var(--vfx-muted)",
+                marginBottom: 14,
+                lineHeight: 1.55,
+              }}
+            >
+              Four real <code>Product</code> objects rendered through the
+              same primitive that&apos;ll back ~40+ instances in M3. Titles
+              share <code>data-pretext-group=&quot;s10-card&quot;</code> and
+              snap to uniform height via{" "}
+              <code>usePretextHeights()</code> at the page root. Card 1 has
+              a discount (strikethrough); card 2 low stock (sand dot);
+              card 3 out of stock (red dot); card 4 no image
+              (Fraunces-glyph placeholder). Hover any card — background
+              shifts <code>--surface</code> → <code>--surface-2</code> over
+              150ms, no lift / no shadow.
+            </p>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4, 1fr)",
+                gap: 16,
+              }}
+            >
+              {S10_PRODUCTS.map((p) => (
+                <ProductCard
+                  key={p.id}
+                  product={p}
+                  pretextGroup="s10-card"
+                />
+              ))}
+            </div>
+
+            <div
+              style={{
+                marginTop: 16,
+                padding: "12px 14px",
+                background: "var(--vfx-bg)",
+                border: "1px dashed var(--vfx-rule)",
+                fontFamily: "var(--font-mono)",
+                fontSize: 11,
+                color: "var(--vfx-muted)",
+                letterSpacing: "0.04em",
+                lineHeight: 1.55,
+              }}
+            >
+              Verify: (a) all 4 card titles render at the same height
+              regardless of word count — Pretext is keying off{" "}
+              <code>pretextGroup</code>; (b) click any card &rarr; URL
+              changes to <code>/product/{`{slug}`}</code> (404 expected,
+              we&apos;re testing linkage); (c) toggle theme &rarr; surfaces,
+              accents, and stock dots all flip; (d) the no-image card
+              shows a Fraunces capital glyph in muted color, not a broken
+              image icon.
             </div>
           </section>
 
