@@ -28,7 +28,7 @@ function CategoryTile({ cat }: { cat: ApiCategory }) {
       : "";
 
   return (
-    <div className="relative h-full w-full bg-card border border-border rounded-xl overflow-hidden group hover:border-warning/60 transition-colors">
+    <div className="relative h-full w-full bg-card border border-border rounded-xl overflow-hidden group hover:border-primary/60 transition-colors">
       <Link
         href={`/category/${cat.slug}`}
         aria-label={cat.name}
@@ -57,7 +57,7 @@ function CategoryTile({ cat }: { cat: ApiCategory }) {
           <span className="text-sm font-bold uppercase tracking-wide">
             {cat.name}
           </span>
-          <ArrowRight className="h-4 w-4 text-warning shrink-0 transition-transform group-hover:translate-x-1" />
+          <ArrowRight className="h-4 w-4 text-primary shrink-0 transition-transform group-hover:translate-x-1" />
         </div>
       </div>
     </div>
@@ -169,7 +169,7 @@ export function CategoryShowcaseSlider() {
           <div className="flex min-w-0 items-center gap-3">
             <span
               aria-hidden
-              className="block h-8 w-2 shrink-0 rounded bg-warning"
+              className="block h-8 w-2 shrink-0 rounded bg-primary"
             />
             <RevealHeading className="text-2xl font-black uppercase tracking-tight text-foreground md:text-3xl">
               {heading}
@@ -182,7 +182,7 @@ export function CategoryShowcaseSlider() {
                 type="button"
                 onClick={prev}
                 aria-label="Previous"
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground transition-colors hover:border-warning hover:text-warning"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground transition-colors hover:border-primary hover:text-primary"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -190,7 +190,7 @@ export function CategoryShowcaseSlider() {
                 type="button"
                 onClick={next}
                 aria-label="Next"
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground transition-colors hover:border-warning hover:text-warning"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground transition-colors hover:border-primary hover:text-primary"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
@@ -243,7 +243,7 @@ export function CategoryShowcaseSlider() {
                     onClick={() => setCurrent(i)}
                     className={`h-2 rounded-full transition-all ${
                       i === current
-                        ? "w-6 bg-warning"
+                        ? "w-6 bg-primary"
                         : "w-2 bg-border hover:bg-muted-foreground"
                     }`}
                   />

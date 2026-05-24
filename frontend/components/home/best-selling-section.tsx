@@ -21,7 +21,7 @@ function SectionHeader({
   return (
     <div className="mb-5 flex items-center justify-between gap-3">
       <div className="flex min-w-0 items-center gap-3">
-        <span aria-hidden className="block h-7 w-1.5 shrink-0 rounded-sm bg-warning" />
+        <span aria-hidden className="block h-7 w-1.5 shrink-0 rounded-sm bg-primary" />
         <RevealHeading
           level={3}
           className="truncate text-xl font-black uppercase tracking-tight text-foreground md:text-2xl"
@@ -45,7 +45,7 @@ export async function BestSellingSection({
     <section className="w-full overflow-hidden py-12">
       <div className="mx-auto w-full max-w-7xl px-4">
         <div className="mb-8 flex items-center gap-3">
-          <span aria-hidden className="block h-8 w-2 shrink-0 rounded bg-warning" />
+          <span aria-hidden className="block h-8 w-2 shrink-0 rounded bg-primary" />
           <RevealHeading className="text-2xl font-black uppercase tracking-tight text-foreground md:text-3xl">
             {t("title")}
           </RevealHeading>
@@ -56,7 +56,7 @@ export async function BestSellingSection({
             {t("empty")}{" "}
             <Link
               href="/admin/dashboard/best-selling"
-              className="font-medium text-warning underline-offset-4 hover:underline"
+              className="font-medium text-primary underline-offset-4 hover:underline"
             >
               {t("configureAdmin")}
             </Link>
@@ -77,7 +77,7 @@ export async function BestSellingSection({
                       row.products.length > 0 ? (
                         <Link
                           href={`/category/${row.category.slug}`}
-                          className="hidden md:inline-flex shrink-0 items-center gap-1 text-xs font-bold uppercase tracking-wider text-warning hover:gap-1.5 transition-all"
+                          className="hidden md:inline-flex shrink-0 items-center gap-1 text-xs font-bold uppercase tracking-wider text-primary hover:gap-1.5 transition-all"
                         >
                           {t("viewAllIn", { name: row.category.name })}
                           <ArrowRight className="h-3.5 w-3.5" />
@@ -90,7 +90,7 @@ export async function BestSellingSection({
                       {t("noProductsCategory")}{" "}
                       <Link
                         href={`/category/${row.category.slug}`}
-                        className="font-medium text-warning underline-offset-4 hover:underline"
+                        className="font-medium text-primary underline-offset-4 hover:underline"
                       >
                         {t("viewCategory")}
                       </Link>
@@ -111,7 +111,7 @@ export async function BestSellingSection({
                         <p className="mt-4 text-xs">
                           <Link
                             href={`/category/${row.category.slug}`}
-                            className="font-bold uppercase tracking-wider text-warning hover:underline"
+                            className="font-bold uppercase tracking-wider text-primary hover:underline"
                           >
                             {t("viewAllIn", { name: row.category.name })}
                           </Link>

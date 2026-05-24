@@ -29,7 +29,15 @@
     "signIn": "Connexion",
     "viewStore": "Voir la boutique",
     "switchToAr": "العربية",
-    "switchToFr": "FR"
+    "switchToFr": "FR",
+    "topBarSearchPlaceholder": "Rechercher une référence, une marque, une catégorie…",
+    "topBarPanier": "Panier",
+    "topBarTheme": "Thème",
+    "topBarThemeAria": "Basculer le thème clair/sombre",
+    "topBarCartLabel": "Voir le panier, {count} articles",
+    "topBarLangLabel": "Changer la langue, active : {current}",
+    "topBarLangFr": "français",
+    "topBarLangAr": "arabe"
   },
   "Footer": {
     "tagline": "Votre boutique pour les dernières technologies. Produits premium, livraison rapide et assistance.",

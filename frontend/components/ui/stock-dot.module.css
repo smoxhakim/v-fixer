@@ -1,0 +1,26 @@
+/* StockDot — M2 step 6.
+   The dot color is keyed off [data-state]; same pattern we use for the
+   bordered stock-status chips in globals.css. currentColor inheritance
+   means a single rule per state covers both background and any future
+   border/text variants. */
+
+.root {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--vfx-muted);
+  letter-spacing: 0.04em;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.dot[data-state="in"]  { background: var(--vfx-in-stock); }
+.dot[data-state="low"] { background: var(--vfx-low-stock); }
+.dot[data-state="out"] { background: var(--vfx-out-stock); }

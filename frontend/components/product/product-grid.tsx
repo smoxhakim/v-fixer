@@ -1,6 +1,6 @@
 import { ProductCard } from "@/components/product/product-card";
 import { RevealHeading } from "@/components/ui/reveal-heading";
-import type { Product } from "@/data/products";
+import type { Product } from "@/lib/api";
 
 export function ProductGrid({
   title,

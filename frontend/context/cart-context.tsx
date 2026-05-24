@@ -7,8 +7,8 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
-import type { Product } from "@/data/products";
-import { normalizeProductImages } from "@/lib/media-url";
+import type { Product } from "@/lib/api";
+import { assertProduct, normalizeProduct } from "@/lib/api";
 import { readCartJson, writeCartJson } from "@/lib/storage-keys";
 
 export interface CartItem {
@@ -22,15 +22,15 @@ interface CartState {
 
 type CartAction =
   | { type: "ADD_ITEM"; product: Product; quantity: number }
-  | { type: "REMOVE_ITEM"; productId: string }
-  | { type: "UPDATE_QTY"; productId: string; quantity: number }
+  | { type: "REMOVE_ITEM"; productId: number }
+  | { type: "UPDATE_QTY"; productId: number; quantity: number }
   | { type: "CLEAR" }
   | { type: "LOAD"; items: CartItem[] };
 
 function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
     case "ADD_ITEM": {
-      const product = normalizeProductImages(action.product);
+      const product = action.product;
       const existing = state.items.find((i) => i.product.id === product.id);
       if (existing) {
         return {
@@ -60,12 +60,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     case "CLEAR":
       return { items: [] };
     case "LOAD":
-      return {
-        items: action.items.map((i) => ({
-          ...i,
-          product: normalizeProductImages(i.product),
-        })),
-      };
+      return { items: action.items };
     default:
       return state;
   }
@@ -74,8 +69,8 @@ function cartReducer(state: CartState, action: CartAction): CartState {
 interface CartContextType {
   items: CartItem[];
   addItem: (product: Product, quantity?: number) => void;
-  removeItem: (productId: string) => void;
-  updateQty: (productId: string, quantity: number) => void;
+  removeItem: (productId: number) => void;
+  updateQty: (productId: number, quantity: number) => void;
   clearCart: () => void;
   itemCount: number;
   subtotal: number;
@@ -90,11 +85,30 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const stored = readCartJson();
-      if (stored) {
-        dispatch({ type: "LOAD", items: JSON.parse(stored) });
+      if (!stored) return;
+      const parsed = JSON.parse(stored);
+      if (!Array.isArray(parsed)) return;
+      // Hydrate from localStorage. Old persisted carts may have legacy shapes
+      // (string ids, snake_case keys). normalizeProduct coerces; assertProduct
+      // validates. Drop entries that fail — better an empty cart than a crash.
+      const items: CartItem[] = [];
+      for (const raw of parsed) {
+        try {
+          if (raw == null || typeof raw !== "object") continue;
+          const r = raw as Record<string, unknown>;
+          const product = normalizeProduct(r.product);
+          assertProduct(product);
+          const quantity = typeof r.quantity === "number" && r.quantity > 0
+            ? r.quantity
+            : 1;
+          items.push({ product, quantity });
+        } catch (e) {
+          console.warn("cart: dropping malformed persisted item", e);
+        }
       }
+      if (items.length > 0) dispatch({ type: "LOAD", items });
     } catch {
-      // ignore
+      // ignore — bad JSON in localStorage, start with empty cart
     }
   }, []);
 
@@ -104,9 +118,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = (product: Product, quantity = 1) =>
     dispatch({ type: "ADD_ITEM", product, quantity });
-  const removeItem = (productId: string) =>
+  const removeItem = (productId: number) =>
     dispatch({ type: "REMOVE_ITEM", productId });
-  const updateQty = (productId: string, quantity: number) =>
+  const updateQty = (productId: number, quantity: number) =>
     dispatch({ type: "UPDATE_QTY", productId, quantity });
   const clearCart = () => dispatch({ type: "CLEAR" });
 

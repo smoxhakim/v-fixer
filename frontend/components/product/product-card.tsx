@@ -2,7 +2,7 @@
 
 import { Link } from "@/i18n/navigation";
 import Image from "next/image";
-import { Star, ShoppingCart } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
   motion,
@@ -17,7 +17,7 @@ import { Chip } from "@heroui/react";
 
 import { formatCurrency } from "@/lib/format";
 import { useCart } from "@/context/cart-context";
-import type { Product } from "@/data/products";
+import type { Product } from "@/lib/api";
 import { resolveMediaSrc } from "@/lib/media-url";
 
 /* Tuning */
@@ -198,7 +198,7 @@ export function ProductCard({
         }
         className="h-full rounded-xl"
       >
-        <div className="group relative flex h-full w-full flex-col bg-card border border-border rounded-xl overflow-hidden transition-colors hover:border-warning/60">
+        <div className="group relative flex h-full w-full flex-col bg-card border border-border rounded-xl overflow-hidden transition-colors hover:border-primary/60">
           {/* Link overlay covers card except interactive children (button is z-40). */}
           <Link
             href={`/product/${product.slug}`}
@@ -274,29 +274,13 @@ export function ProductCard({
                 : t("uncategorized")}
             </span>
 
-            <span className="text-sm font-semibold text-foreground line-clamp-2 leading-snug group-hover:text-warning transition-colors">
+            <span className="text-sm font-semibold text-foreground line-clamp-2 leading-snug group-hover:text-primary transition-colors">
               {product.name}
             </span>
 
-            <div className="flex items-center gap-0.5">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star
-                  key={i}
-                  className={`h-3 w-3 ${
-                    i < Math.floor(product.rating)
-                      ? "fill-warning text-warning"
-                      : "fill-muted text-muted"
-                  }`}
-                />
-              ))}
-              <span className="ms-1 text-[10px] text-muted-foreground">
-                ({product.rating})
-              </span>
-            </div>
-
             <div className="mt-1 flex items-center justify-between gap-2">
               <div className="flex items-baseline gap-2">
-                <span className="text-base font-bold text-warning">
+                <span className="text-base font-bold text-primary">
                   {formatCurrency(product.discountPrice ?? product.price)}
                 </span>
                 {hasDiscount ? (
@@ -312,7 +296,7 @@ export function ProductCard({
                   addItem(product);
                 }}
                 aria-label={t("addToCart", { name: product.name })}
-                className="relative z-40 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-warning text-warning-foreground transition-opacity hover:opacity-90"
+                className="relative z-40 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground transition-opacity hover:opacity-90"
               >
                 <ShoppingCart className="h-4 w-4" strokeWidth={2.2} />
               </button>

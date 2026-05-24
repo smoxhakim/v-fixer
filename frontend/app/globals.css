@@ -1,87 +1,235 @@
-@import 'tailwindcss';
-@import 'tw-animate-css';
-
-/* HeroUI: scan its compiled classes so Tailwind v4 emits the utilities */
-@source "../node_modules/@heroui/theme/dist/**/*.{js,mjs}";
+/* HeroUI v3 ships its own package-root index.css that chains tailwindcss,
+   tw-animate-css, base styles, component CSS, theme variables, utilities,
+   and variants in the correct layer order. Importing the package root is
+   the canonical way to bring HeroUI v3 styles into a Tailwind v4 app —
+   it's a CSS-cascade system, not a JS plugin (verified via M1 spike
+   2026-05-20). Our overrides below redefine the color variables with
+   DESIGN.md hex values; cascade order means our values win. */
+@import '@heroui/styles';
 
 @custom-variant dark (&:is(.dark *));
 
-:root {
-  --background: oklch(0.99 0.002 240);
-  --foreground: oklch(0.16 0.01 240);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.16 0.01 240);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.16 0.01 240);
-  /* Brand: refined light blue (sky/arctic), ~#5BB6E8 */
-  --primary: oklch(0.76 0.12 230);
-  --primary-foreground: oklch(0.14 0.02 240);
-  --secondary: oklch(0.96 0.005 240);
-  --secondary-foreground: oklch(0.20 0.01 240);
-  --muted: oklch(0.96 0.005 240);
-  --muted-foreground: oklch(0.50 0.01 240);
-  --accent: oklch(0.76 0.12 230);
-  --accent-foreground: oklch(0.14 0.02 240);
-  --destructive: oklch(0.58 0.245 27);
-  --destructive-foreground: oklch(0.99 0.002 240);
-  --border: oklch(0.91 0.005 240);
-  --input: oklch(0.91 0.005 240);
-  --ring: oklch(0.76 0.12 230);
+/* ============================================================================
+   v-fixer · DESIGN.md tokens — SPIKE: COLORS ONLY
+   ============================================================================
+   Single canonical source (--vfx-*). HeroUI v3 names alias to it.
+   Shadcn-style names also alias to it so admin dashboard keeps rendering.
+   Fonts / spacing / motion / radii NOT yet wired — that's the rest of M1.
+   ============================================================================ */
+:root,
+.light,
+[data-theme="light"] {
+  /* DESIGN.md canonical (light) */
+  --vfx-bg:         #F5F1E8;
+  --vfx-surface:    #FBF8F1;
+  --vfx-surface-2:  #EFEADF;
+  --vfx-photo-bg:   #FFFFFF;
+  --vfx-ink:        #1C1A17;
+  --vfx-muted:      #6B655A;
+  --vfx-rule:       #D9D2C1;
+  --vfx-accent:     #1E5A8A;
+  --vfx-in-stock:   #4F6B3A;
+  --vfx-low-stock:  #8B6F47;
+  --vfx-out-stock:  #8A2A2A;
+
+  /* HeroUI v3 variable names — point at DESIGN.md canonical */
+  --background:                   var(--vfx-bg);
+  --foreground:                   var(--vfx-ink);
+  --surface:                      var(--vfx-surface);
+  --surface-foreground:           var(--vfx-ink);
+  --surface-secondary:            var(--vfx-surface-2);
+  --surface-secondary-foreground: var(--vfx-ink);
+  --surface-tertiary:             var(--vfx-rule);
+  --surface-tertiary-foreground:  var(--vfx-ink);
+  --overlay:                      var(--vfx-surface);
+  --overlay-foreground:           var(--vfx-ink);
+  --default:                      var(--vfx-surface-2);
+  --default-foreground:           var(--vfx-ink);
+  --accent:                       var(--vfx-accent);
+  --accent-foreground:            #FFFFFF;
+  --success:                      var(--vfx-in-stock);
+  --success-foreground:           #FFFFFF;
+  --warning:                      var(--vfx-low-stock);
+  --warning-foreground:           #FFFFFF;
+  --danger:                       var(--vfx-out-stock);
+  --danger-foreground:            #FFFFFF;
+  --border:                       var(--vfx-rule);
+  --separator:                    var(--vfx-rule);
+  --focus:                        var(--vfx-accent);
+  --link:                         var(--vfx-ink);
+  --muted:                        var(--vfx-muted);
+
+  /* Shadcn-named aliases — admin dashboard consumes these. Single source. */
+  --card:                  var(--vfx-surface);
+  --card-foreground:       var(--vfx-ink);
+  --popover:               var(--vfx-surface);
+  --popover-foreground:    var(--vfx-ink);
+  --primary:               var(--vfx-accent);
+  --primary-foreground:    #FFFFFF;
+  --secondary:             var(--vfx-surface-2);
+  --secondary-foreground:  var(--vfx-ink);
+  --muted-foreground:      var(--vfx-muted);
+  --destructive:           var(--vfx-out-stock);
+  --destructive-foreground:#FFFFFF;
+  --input:                 var(--vfx-rule);
+  --ring:                  var(--vfx-accent);
+
+  /* Chart palette: keep existing semantics for admin charts */
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
+
+  /* Radius token — NOT yet rewired to DESIGN.md. Future M1 step. */
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+
+  /* Sidebar palette (admin) — kept; later M1 step decides whether to align */
+  --sidebar:                          var(--vfx-surface);
+  --sidebar-foreground:               var(--vfx-ink);
+  --sidebar-primary:                  var(--vfx-ink);
+  --sidebar-primary-foreground:       var(--vfx-surface);
+  --sidebar-accent:                   var(--vfx-surface-2);
+  --sidebar-accent-foreground:        var(--vfx-ink);
+  --sidebar-border:                   var(--vfx-rule);
+  --sidebar-ring:                     var(--vfx-accent);
 }
 
-.dark {
-  --background: oklch(0.05 0 0);
-  --foreground: oklch(0.96 0 0);
-  --card: oklch(0.10 0 0);
-  --card-foreground: oklch(0.96 0 0);
-  --popover: oklch(0.10 0 0);
-  --popover-foreground: oklch(0.96 0 0);
-  /* Brand stays the same blue across themes for consistency */
-  --primary: oklch(0.76 0.12 230);
-  --primary-foreground: oklch(0.08 0.02 240);
-  --secondary: oklch(0.16 0 0);
-  --secondary-foreground: oklch(0.96 0 0);
-  --muted: oklch(0.16 0 0);
-  --muted-foreground: oklch(0.70 0 0);
-  --accent: oklch(0.76 0.12 230);
-  --accent-foreground: oklch(0.08 0.02 240);
-  --destructive: oklch(0.55 0.22 27);
-  --destructive-foreground: oklch(0.96 0 0);
-  --border: oklch(0.20 0 0);
-  --input: oklch(0.20 0 0);
-  --ring: oklch(0.76 0.12 230);
+.dark,
+[data-theme="dark"] {
+  /* DESIGN.md canonical (dark) */
+  --vfx-bg:         #14110D;
+  --vfx-surface:    #1B1814;
+  --vfx-surface-2:  #221E18;
+  --vfx-photo-bg:   #F5F1E8;
+  --vfx-ink:        #EDE7D8;
+  --vfx-muted:      #9A9281;
+  --vfx-rule:       #2C2820;
+  --vfx-accent:     #4A8FBE;
+  --vfx-in-stock:   #7FA56F;
+  --vfx-low-stock:  #B89971;
+  --vfx-out-stock:  #C25B5B;
+
+  /* HeroUI v3 vars repoint at dark canonical */
+  --background:                   var(--vfx-bg);
+  --foreground:                   var(--vfx-ink);
+  --surface:                      var(--vfx-surface);
+  --surface-foreground:           var(--vfx-ink);
+  --surface-secondary:            var(--vfx-surface-2);
+  --surface-secondary-foreground: var(--vfx-ink);
+  --surface-tertiary:             var(--vfx-rule);
+  --surface-tertiary-foreground:  var(--vfx-ink);
+  --overlay:                      var(--vfx-surface);
+  --overlay-foreground:           var(--vfx-ink);
+  --default:                      var(--vfx-surface-2);
+  --default-foreground:           var(--vfx-ink);
+  --accent:                       var(--vfx-accent);
+  --accent-foreground:            #14110D;
+  --success:                      var(--vfx-in-stock);
+  --success-foreground:           #14110D;
+  --warning:                      var(--vfx-low-stock);
+  --warning-foreground:           #14110D;
+  --danger:                       var(--vfx-out-stock);
+  --danger-foreground:            #14110D;
+  --border:                       var(--vfx-rule);
+  --separator:                    var(--vfx-rule);
+  --focus:                        var(--vfx-accent);
+  --link:                         var(--vfx-ink);
+  --muted:                        var(--vfx-muted);
+
+  /* Shadcn names mirrored */
+  --card:                   var(--vfx-surface);
+  --card-foreground:        var(--vfx-ink);
+  --popover:                var(--vfx-surface);
+  --popover-foreground:     var(--vfx-ink);
+  --primary:                var(--vfx-accent);
+  --primary-foreground:     #14110D;
+  --secondary:              var(--vfx-surface-2);
+  --secondary-foreground:   var(--vfx-ink);
+  --muted-foreground:       var(--vfx-muted);
+  --destructive:            var(--vfx-out-stock);
+  --destructive-foreground: #14110D;
+  --input:                  var(--vfx-rule);
+  --ring:                   var(--vfx-accent);
+
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.10 0 0);
-  --sidebar-foreground: oklch(0.96 0 0);
-  --sidebar-primary: oklch(0.74 0.17 65);
-  --sidebar-primary-foreground: oklch(0.05 0 0);
-  --sidebar-accent: oklch(0.16 0 0);
-  --sidebar-accent-foreground: oklch(0.96 0 0);
-  --sidebar-border: oklch(0.20 0 0);
-  --sidebar-ring: oklch(0.74 0.17 65);
+
+  --sidebar:                          var(--vfx-surface);
+  --sidebar-foreground:               var(--vfx-ink);
+  --sidebar-primary:                  var(--vfx-accent);
+  --sidebar-primary-foreground:       #14110D;
+  --sidebar-accent:                   var(--vfx-surface-2);
+  --sidebar-accent-foreground:        var(--vfx-ink);
+  --sidebar-border:                   var(--vfx-rule);
+  --sidebar-ring:                     var(--vfx-accent);
+}
+
+/* ============================================================================
+   v-fixer · DESIGN.md motion tokens (M2 step 1.5)
+   ============================================================================
+   Theme-independent: motion does not change between light and dark, so these
+   live in a single :root block rather than being duplicated into .dark.
+   Values are the exact set in DESIGN.md → Motion → Tokens. The unprefixed
+   aliases (--ease-out, --dur-gallery, …) match DESIGN.md verbatim so the
+   "Allowed motion" table maps 1:1 to CSS. Components should reference the
+   unprefixed aliases — they're the public API of the motion system.
+   ============================================================================ */
+:root {
+  /* Canonical (vfx-prefixed) */
+  --vfx-ease-out:    cubic-bezier(0.2, 0, 0, 1);     /* enter, primary motion */
+  --vfx-ease-in:     cubic-bezier(0.4, 0, 1, 1);     /* exit */
+  --vfx-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);   /* state-to-state */
+
+  --vfx-dur-micro:   100ms;   /* state acks, ticks */
+  --vfx-dur-short:   150ms;   /* card hover, input focus */
+  --vfx-dur-card:    180ms;   /* add-to-cart label swap, cart-count pulse */
+  --vfx-dur-page:    240ms;   /* page transitions */
+  --vfx-dur-gallery: 320ms;   /* PDP image gallery cross-fade */
+
+  /* Public aliases — match DESIGN.md names exactly. Components use these. */
+  --ease-out:    var(--vfx-ease-out);
+  --ease-in:     var(--vfx-ease-in);
+  --ease-in-out: var(--vfx-ease-in-out);
+
+  --dur-micro:   var(--vfx-dur-micro);
+  --dur-short:   var(--vfx-dur-short);
+  --dur-card:    var(--vfx-dur-card);
+  --dur-page:    var(--vfx-dur-page);
+  --dur-gallery: var(--vfx-dur-gallery);
+}
+
+/* DESIGN.md mandate: prefers-reduced-motion collapses every duration to 0ms.
+   Overriding the canonical --vfx-dur-* tokens is enough; the unprefixed
+   aliases re-resolve through var() automatically. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --vfx-dur-micro:   0ms;
+    --vfx-dur-short:   0ms;
+    --vfx-dur-card:    0ms;
+    --vfx-dur-page:    0ms;
+    --vfx-dur-gallery: 0ms;
+  }
 }
 
 @theme inline {
-  --font-sans: var(--font-inter), 'Inter', system-ui, sans-serif;
-  --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+  /* ----------------------------------------------------------------------
+     Typography aliases — canonical names consumed by components.
+     next/font sets --font-fraunces / --font-geist / --font-ibm-plex-arabic /
+     --font-jetbrains-mono on <body> (see app/layout.tsx). These four lines
+     give them the names DESIGN.md uses everywhere.
+     ---------------------------------------------------------------------- */
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-body:    var(--font-geist), -apple-system, system-ui, sans-serif;
+  --font-arabic:  var(--font-ibm-plex-arabic), system-ui, sans-serif;
+  --font-mono:    var(--font-jetbrains-mono), ui-monospace, monospace;
+  /* Tailwind's --font-sans utility still resolves to body (Geist). */
+  --font-sans:    var(--font-body);
+
+  /* Shadcn-named Tailwind utilities (bg-card, text-foreground, …) — admin */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -106,10 +254,12 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -119,30 +269,18 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* Convenience color so `text-warning` / `bg-warning` resolves to brand orange */
-  --color-warning: var(--primary);
-  --color-warning-foreground: var(--primary-foreground);
-
-  /* HeroUI semantic aliases — same vars, HeroUI's names */
-  --color-heroui-background: var(--background);
-  --color-heroui-foreground: var(--foreground);
-  --color-heroui-content1: var(--card);
-  --color-heroui-content2: var(--secondary);
-  --color-heroui-content3: var(--muted);
-  --color-heroui-content4: var(--border);
-  --color-heroui-divider: var(--border);
-  --color-heroui-focus: var(--ring);
-  --color-heroui-primary: var(--primary);
-  --color-heroui-primary-foreground: var(--primary-foreground);
-  --color-heroui-secondary: var(--secondary);
-  --color-heroui-secondary-foreground: var(--secondary-foreground);
-  --color-heroui-warning: var(--primary);
-  --color-heroui-warning-foreground: var(--primary-foreground);
-  --color-heroui-danger: var(--destructive);
-  --color-heroui-danger-foreground: var(--destructive-foreground);
-  --color-heroui-default: var(--muted);
-  --color-heroui-default-foreground: var(--muted-foreground);
-  --color-heroui-success: oklch(0.72 0.17 145);
+  /* v-fixer canonical Tailwind utilities (bg-vfx-bg, text-vfx-ink, …) */
+  --color-vfx-bg:        var(--vfx-bg);
+  --color-vfx-surface:   var(--vfx-surface);
+  --color-vfx-surface-2: var(--vfx-surface-2);
+  --color-vfx-photo-bg:  var(--vfx-photo-bg);
+  --color-vfx-ink:       var(--vfx-ink);
+  --color-vfx-muted:     var(--vfx-muted);
+  --color-vfx-rule:      var(--vfx-rule);
+  --color-vfx-accent:    var(--vfx-accent);
+  --color-vfx-in-stock:  var(--vfx-in-stock);
+  --color-vfx-low-stock: var(--vfx-low-stock);
+  --color-vfx-out-stock: var(--vfx-out-stock);
 }
 
 @layer base {
@@ -158,5 +296,73 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Canonical font aliases live HERE (on body, not :root) because next/font
+       sets --font-fraunces / --font-geist / --font-ibm-plex-arabic /
+       --font-jetbrains-mono via classNames on this same element. Declaring
+       the aliases at :root would compute them BEFORE the source vars exist
+       in scope, and the inherited value would be empty. Declared on body,
+       the var() resolves correctly and inherits to all descendants. */
+    --font-display: var(--font-fraunces), Georgia, serif;
+    --font-body:    var(--font-geist), -apple-system, system-ui, sans-serif;
+    --font-arabic:  var(--font-ibm-plex-arabic), system-ui, sans-serif;
+    --font-mono:    var(--font-jetbrains-mono), ui-monospace, monospace;
+    font-family: var(--font-body);
+    font-feature-settings: "tnum" on, "ss01" on;
+  }
+  /* Locale-aware body font: Arabic body uses IBM Plex Sans Arabic. */
+  [dir="rtl"] body {
+    font-family: var(--font-arabic);
+  }
+  /* Opt-in icon mirroring for RTL. Mark any directional icon (arrows,
+     chevrons, pagination prev/next, gallery prev/next) with the
+     data-rtl-flip attribute and it will mirror horizontally in any
+     subtree where dir="rtl" applies. Single declarative rule —
+     see DESIGN.md "RTL handling" for the apply/skip matrix. */
+  [dir="rtl"] [data-rtl-flip] {
+    transform: scaleX(-1);
+  }
+}
+
+/* ============================================================================
+   v-fixer radius hybrid spec (DESIGN.md, three-tier).
+   ============================================================================
+   Tier 1 (2px, strict): rectangular primitives — Button, Input, Textarea,
+   Select, Card. HeroUI v3 hardcodes radii on these via @apply rounded-3xl
+   (Button → 30px) / similar (Card → larger). The CSS variable override on
+   --radius does not reach them; we override the component classes directly.
+
+   Tier 2 (HeroUI defaults, unchanged): Chip / Avatar / Switch / Skeleton.
+   Conceptually round — pill chips, circular avatars, slider switches.
+
+   Tier 3 (9999px, explicit at usage site, not here): cart-count badge,
+   stock dots, mobile language toggle pill. Applied per-component, not
+   via globals.css.
+   ========================================================================== */
+@layer components {
+  .button {
+    border-radius: 2px;
+  }
+  .input,
+  .textarea,
+  .select {
+    border-radius: 2px;
+  }
+  .card {
+    border-radius: 2px;
+  }
+
+  /* ----------------------------------------------------------------------
+     Stock-status chip border (DESIGN.md exception, M2 step 2.5).
+     ----------------------------------------------------------------------
+     HeroUI v3 dropped the v2 `bordered` chip variant, but DESIGN.md
+     deliberately uses a bordered look for operational stock badges
+     (in-stock / low-stock / out-of-stock) — the border distinguishes
+     "operational status" from "tag" (soft) and "muted detail" (text-only
+     tertiary). Opt-in via data-stock; do NOT apply to every tertiary
+     chip. currentColor inherits the chip's foreground (sage / sand /
+     red) so the border matches the text automatically.
+     ---------------------------------------------------------------------- */
+  .chip[data-stock] {
+    border: 1px solid currentColor;
   }
 }

@@ -168,7 +168,7 @@ export function HeroSection({
                 color="warning"
                 variant="flat"
                 size="sm"
-                className="w-fit font-bold uppercase tracking-[0.2em] text-warning bg-warning/15 rounded-md"
+                className="w-fit font-bold uppercase tracking-[0.2em] text-primary bg-primary/15 rounded-md"
               >
                 {active.tag}
               </Chip>
@@ -186,7 +186,7 @@ export function HeroSection({
               <Button
                 size="lg"
                 onPress={() => router.push(active.href)}
-                className="mt-7 w-fit rounded-full bg-warning text-warning-foreground font-bold uppercase tracking-wider px-6 py-3 hover:opacity-90 inline-flex items-center gap-2"
+                className="mt-7 w-fit rounded-full bg-primary text-primary-foreground font-bold uppercase tracking-wider px-6 py-3 hover:opacity-90 inline-flex items-center gap-2"
               >
                 {t("shopNow")}
                 <ArrowRight className="h-4 w-4" />
@@ -212,7 +212,7 @@ export function HeroSection({
                       onClick={() => setCurrent(i)}
                       className={`rounded-full transition-all ${
                         i === current
-                          ? "h-2 w-6 bg-warning"
+                          ? "h-2 w-6 bg-primary"
                           : "h-2 w-2 bg-white/40 hover:bg-white/60"
                       }`}
                       aria-label={t("goToSlide", { n: i + 1 })}
@@ -263,7 +263,7 @@ export function HeroSection({
                     color="warning"
                     variant="flat"
                     size="sm"
-                    className="font-bold uppercase tracking-[0.18em] text-warning bg-warning/15 rounded-md"
+                    className="font-bold uppercase tracking-[0.18em] text-primary bg-primary/15 rounded-md"
                   >
                     {promo.tag}
                   </Chip>
@@ -274,7 +274,7 @@ export function HeroSection({
                     {promo.title}
                   </h3>
                 </div>
-                <span className="inline-flex items-center gap-1.5 text-sm font-bold uppercase tracking-wider text-warning transition group-hover:gap-2">
+                <span className="inline-flex items-center gap-1.5 text-sm font-bold uppercase tracking-wider text-primary transition group-hover:gap-2">
                   {t("shopNowSide")}
                   <ArrowRight className="size-4 shrink-0" aria-hidden />
                 </span>

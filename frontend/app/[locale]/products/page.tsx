@@ -5,9 +5,7 @@ import { getCategories, getProducts } from "@/lib/api";
 import { Link } from "@/i18n/navigation";
 import { ProductCard } from "@/components/product/product-card";
 import { RevealHeading } from "@/components/ui/reveal-heading";
-import type { Product } from "@/data/products";
-
-type StoreCategory = { id: string | number; name: string; slug: string };
+import type { Product } from "@/lib/api";
 
 export async function generateMetadata({
   params,
@@ -33,7 +31,7 @@ export default async function AllProductsPage({
   const tCat = await getTranslations("CategoryPage");
 
   const [categories, allProducts] = await Promise.all([
-    getCategories() as Promise<StoreCategory[]>,
+    getCategories(),
     getProducts(),
   ]);
 

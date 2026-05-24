@@ -40,9 +40,9 @@ export async function TrustBadges() {
           {badges.map(({ Icon, titleKey, descKey, descParams }) => (
             <div
               key={titleKey}
-              className="flex w-full flex-row items-center gap-3 rounded-xl border border-border bg-card p-4 md:p-5 hover:border-warning/60 transition-colors"
+              className="flex w-full flex-row items-center gap-3 rounded-xl border border-border bg-card p-4 md:p-5 hover:border-primary/60 transition-colors"
             >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-warning/10 text-warning">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <Icon className="h-5 w-5" />
               </span>
               <div className="min-w-0">

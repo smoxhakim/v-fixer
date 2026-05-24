@@ -131,10 +131,17 @@ font-variation-settings: "opsz" <size>, "SOFT" 30;
 - **Approach:** grid-disciplined with a hybrid card/ruled-row split (see Risks below).
 - **Grid:** 12-col desktop, 6-col tablet, 1-col mobile.
 - **Max content width:** 1200px (tighter than SaaS default — catalog-flavored).
-- **Border radius:**
-  - **2px** on buttons, inputs, cards (functional, quiet — never bubble-radius)
-  - **0px** on ruled rows, table cells, image-well dividers
-  - **9999px** only on chips, pills, status badges
+- **Border radius — three-tier hybrid spec:**
+  - **2px (strict default for "primitives that exist as rectangles"):** Button, Input, Textarea, Select, Card. Functional, quiet, never bubble-radius. Override HeroUI's defaults (which are 30px pills on Button, 20px on Card etc.) via CSS rules in `globals.css` after the `@import '@heroui/styles'`.
+  - **HeroUI defaults survive for "primitives that are conceptually round":** Chip (brand chips like "MAGMA" stay pill-shaped — HeroUI's `rounded-[20px]`), Avatar (round by default — correct), Switch (slider physical metaphor — correct), Skeleton (matches the primitive it's standing in for).
+  - **9999px (explicit) for "anything that's literally a circle by intent":** cart-count badge in the top bar, in-stock / low-stock / out-stock dots, mobile language toggle pill, dot-nav indicators on the hero spread.
+  - **0px** on ruled rows, table cells, image-well dividers, photo well containers inside Cards (photos read true against hairline edges, not curves).
+
+- **Chip variant vocabulary (HeroUI v3 mapping):**
+  - **`variant="primary"`** — solid filled chip (e.g. REF badges in `accent`). High-attention identifiers.
+  - **`variant="soft"`** — muted tinted background. Used for tags / facets / non-status metadata (e.g. brand chips like "Magma · C115").
+  - **`variant="tertiary"`** — transparent background, colored text only. Default for muted detail.
+  - **Stock-status chips (in-stock / low-stock / out-of-stock) are a tertiary + bordered exception.** They use `variant="tertiary"` with the `data-stock="in|low|out"` attribute, which adds a 1px solid currentColor border via the rule in `globals.css`. The border distinguishes "operational status badge" from soft (tag) and from plain tertiary (muted detail) — this visual signature is load-bearing in the catalog vocabulary. **Do not extend the border to other tertiary chips.** Apply `data-stock` only to actual stock status badges.
 - **Elevation:** hairline rules (`--rule`) + ink-weight changes. **Zero drop shadows. Zero glow.**
 - **Hairlines:** 1px solid in `--rule`. On retina, 0.5px is acceptable but never decorative.
 
@@ -229,7 +236,7 @@ In addition to the motion refusals above, the system refuses:
 
 - Gradients of any kind (backgrounds, buttons, accents).
 - Drop shadows, box-shadow elevation, glow effects.
-- Border-radius above 2px on cards/buttons/inputs (badges/pills excepted).
+- Border-radius above 2px on the rectangular primitives — Button, Input, Textarea, Select, Card. (Chip / Avatar / Switch / Skeleton keep HeroUI's defaults; explicit 9999px is reserved for circular-by-intent elements like badges, stock dots, and pill toggles.)
 - Sale ribbons, "NEW" badges, countdown timers, urgency banners.
 - Emoji in production UI.
 - Lifestyle stock photography, "trusted by" logo walls, testimonials carousels. (Hero *spreads* — user-controlled, max 3 slides, no overlay text — are allowed on the homepage only; see "Hero — user-controlled product spread" above.)
@@ -249,9 +256,33 @@ A single restrained `#1E5A8A` accent on linen `#F5F1E8`. Departs from both MENA 
 **R3 — Bilingual numerals on price detail.**
 On product detail pages and cart totals, Latin and Arabic digits appear side-by-side in tabular mono (e.g., `4,370.00 MAD · ٤٬٣٧٠.٠٠`). Cultural fluency no MENA competitor offers. Costs ~12% horizontal space on price detail components. Can be disabled if mobile space gets tight.
 
+## RTL handling
+
+Arabic is first-class — set via `dir="rtl"` on `<html>` when `locale === "ar"` (already wired in `frontend/app/layout.tsx`). The font automatically switches to IBM Plex Sans Arabic via the `[dir="rtl"] body` selector in `globals.css`.
+
+**Directional icons mirror via attribute, not className.** Single global rule in `globals.css @layer base`:
+
+```css
+[dir="rtl"] [data-rtl-flip] { transform: scaleX(-1); }
+```
+
+Mark icons with `data-rtl-flip` when their visual direction encodes UI direction. The attribute is **opt-in** — bare icons / wordmarks / photos never flip.
+
+| Apply `data-rtl-flip` | Skip it |
+|---|---|
+| Arrow CTAs (`Acheter →`) — the arrow encodes "forward" | Search / magnifying glass — rotationally symmetric-ish |
+| Breadcrumb chevrons — encode hierarchy direction | Qty stepper `+` / `−` — math symbols, neutral |
+| Pagination prev / next arrows | Cart icon — neutral pictogram |
+| Gallery prev / next, HeroSpread arrows | Logos, wordmarks, brand marks |
+| Hero "see more" arrows | Product photos — content has its own correct orientation |
+
+Convention: scope the attribute to the actual arrow element, not the whole link. For `Acheter →` the `ArrowRight` icon gets `data-rtl-flip`; the `<a>` and the text "Acheter" don't.
+
+HeroUI's compiled CSS leaks physical properties (`padding-left`, `margin-right`) in some primitives (`Input`, `Drawer`, `Navbar`, `Select`). These will need explicit `[dir="rtl"]` overrides in `globals.css` during M2 — see migration plan Risk 2. Out of scope for the M1 rule itself.
+
 ## Implementation notes
 
-- **HeroUI migration:** wire HeroUI component tokens to the CSS custom properties above. The accent slot in HeroUI's theme should resolve to `--accent`. The default radius should resolve to 2px (HeroUI defaults to larger; override).
+- **HeroUI migration:** import HeroUI v3 via `@import '@heroui/styles'` at the top of `globals.css` (the package root chains base + components + theme + utilities + variants in layered cascade order). Then override CSS variables in `:root` / `.dark` blocks: `--accent → --vfx-accent`, `--background → --vfx-bg`, `--surface → --vfx-surface`, etc. Radii do NOT flow through token override (verified via M1 spike 2026-05-20 — HeroUI's button.css uses literal `@apply rounded-3xl`, not `var(--radius)`). Wire the three-tier radius spec from the Layout section via explicit CSS overrides after the import: `.button, .input, .textarea, .select, .card { border-radius: 2px; }` and leave Chip/Avatar/Switch/Skeleton at HeroUI defaults.
 - **shadcn-style components (admin):** the existing oklch-based palette in `frontend/app/globals.css` should be replaced with the hex values above. Migrate gradually — start with `--background`, `--foreground`, `--primary`, `--border`, then the rest.
 - **Tailwind v4:** define the design tokens in `@theme` in globals.css so utilities like `bg-bg`, `text-ink`, `border-rule`, `text-accent` are available.
 - **Fonts:** load from Google Fonts in the root layout. Set `next/font` for Geist and Fraunces if available; otherwise use the `<link>` above.
