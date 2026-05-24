@@ -31,9 +31,8 @@ import { resolveMediaSrc } from "@/lib/media-url";
 import type { Product } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
 
+import { StockDot } from "./stock-dot";
 import styles from "./product-card.module.css";
-
-const LOW_STOCK_THRESHOLD = 5;
 
 export interface ProductCardProps {
   product: Product;
@@ -50,22 +49,6 @@ export interface ProductCardProps {
   className?: string;
 }
 
-type StockState = "in" | "low" | "out";
-
-function stockStateOf(stock: number): StockState {
-  if (stock <= 0) return "out";
-  if (stock < LOW_STOCK_THRESHOLD) return "low";
-  return "in";
-}
-
-function stockLabelOf(state: StockState, stock: number): string {
-  switch (state) {
-    case "out": return "Rupture";
-    case "low": return "Faible stock";
-    case "in":  return `${stock} en stock`;
-  }
-}
-
 export function ProductCard({
   product,
   href,
@@ -78,9 +61,6 @@ export function ProductCard({
   const linkHref = href ?? `/product/${product.slug}`;
   const photo = product.images[0];
   const photoSrc = photo ? resolveMediaSrc(photo) : null;
-
-  const stockState = stockStateOf(product.stock);
-  const stockLabel = stockLabelOf(stockState, product.stock);
 
   const hasDiscount =
     showStrikethrough &&
@@ -131,10 +111,7 @@ export function ProductCard({
           </div>
 
           {showStockDot ? (
-            <div className={styles.stockRow}>
-              <span className={styles.dot} data-state={stockState} aria-hidden />
-              <span>{stockLabel}</span>
-            </div>
+            <StockDot stock={product.stock} className={styles.stockRow} />
           ) : null}
         </div>
       </article>

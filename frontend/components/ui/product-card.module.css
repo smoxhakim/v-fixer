@@ -103,24 +103,8 @@
   font-feature-settings: "tnum" on;
 }
 
+/* The visual style of the stock row lives in stock-dot.module.css.
+   ProductCard only owns the spacing relative to the price row above it. */
 .stockRow {
-  display: flex;
-  align-items: center;
-  gap: 6px;
   margin-top: 8px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--vfx-muted);
-  letter-spacing: 0.04em;
 }
-
-.dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 9999px;
-  flex-shrink: 0;
-}
-
-.dot[data-state="in"]  { background: var(--vfx-in-stock); }
-.dot[data-state="low"] { background: var(--vfx-low-stock); }
-.dot[data-state="out"] { background: var(--vfx-out-stock); }

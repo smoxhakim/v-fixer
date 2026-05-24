@@ -26,6 +26,7 @@ import {
 import { usePretextHeights } from "@/lib/pretext";
 import { CrossFadeStack } from "@/components/ui/cross-fade-stack";
 import { ProductCard } from "@/components/ui/product-card";
+import { StockDot } from "@/components/ui/stock-dot";
 import type { Product } from "@/lib/api";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -1995,6 +1996,129 @@ export default function ThemeProbe() {
               accents, and stock dots all flip; (d) the no-image card
               shows a Fraunces capital glyph in muted color, not a broken
               image icon.
+            </div>
+          </section>
+
+          {/* StockDot primitive — extracted from ProductCard in step 6 */}
+          <section style={{ marginBottom: 40 }}>
+            <h2
+              style={{
+                fontSize: 11,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: "var(--vfx-muted)",
+                marginBottom: 12,
+              }}
+            >
+              10b · StockDot (M2 step 6)
+            </h2>
+            <p
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: 11,
+                letterSpacing: "0.04em",
+                color: "var(--vfx-muted)",
+                marginBottom: 14,
+                lineHeight: 1.55,
+              }}
+            >
+              Standalone primitive — same dot + label that section 10
+              renders inside <code>ProductCard</code>, now reusable for
+              PDP, cart line items, search rows, admin tables. Default
+              threshold is 5; the third row overrides to 10 to demonstrate
+              the boundary is configurable.
+            </p>
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 14,
+                background: "var(--vfx-surface)",
+                border: "1px solid var(--vfx-rule)",
+                borderRadius: 2,
+                padding: 16,
+                maxWidth: 640,
+              }}
+            >
+              {/* Row 1: three states with default threshold */}
+              <div style={{ display: "flex", gap: 32, alignItems: "center" }}>
+                <span
+                  style={{
+                    width: 140,
+                    fontFamily: "var(--font-mono)",
+                    fontSize: 10,
+                    letterSpacing: "0.05em",
+                    textTransform: "uppercase",
+                    color: "var(--vfx-muted)",
+                  }}
+                >
+                  Default (threshold=5)
+                </span>
+                <StockDot stock={0} />
+                <StockDot stock={2} />
+                <StockDot stock={42} />
+              </div>
+
+              {/* Row 2: dot-only (showLabel=false) */}
+              <div style={{ display: "flex", gap: 32, alignItems: "center" }}>
+                <span
+                  style={{
+                    width: 140,
+                    fontFamily: "var(--font-mono)",
+                    fontSize: 10,
+                    letterSpacing: "0.05em",
+                    textTransform: "uppercase",
+                    color: "var(--vfx-muted)",
+                  }}
+                >
+                  showLabel=false
+                </span>
+                <StockDot stock={0} showLabel={false} />
+                <StockDot stock={2} showLabel={false} />
+                <StockDot stock={42} showLabel={false} />
+              </div>
+
+              {/* Row 3: custom threshold=10 — stock=2 stays "low", stock=8 now "low" too */}
+              <div style={{ display: "flex", gap: 32, alignItems: "center" }}>
+                <span
+                  style={{
+                    width: 140,
+                    fontFamily: "var(--font-mono)",
+                    fontSize: 10,
+                    letterSpacing: "0.05em",
+                    textTransform: "uppercase",
+                    color: "var(--vfx-muted)",
+                  }}
+                >
+                  threshold=10
+                </span>
+                <StockDot stock={0} threshold={10} />
+                <StockDot stock={2} threshold={10} />
+                <StockDot stock={8} threshold={10} />
+                <StockDot stock={42} threshold={10} />
+              </div>
+            </div>
+
+            <div
+              style={{
+                marginTop: 16,
+                padding: "12px 14px",
+                background: "var(--vfx-bg)",
+                border: "1px dashed var(--vfx-rule)",
+                fontFamily: "var(--font-mono)",
+                fontSize: 11,
+                color: "var(--vfx-muted)",
+                letterSpacing: "0.04em",
+                lineHeight: 1.55,
+              }}
+            >
+              Verify: row 1 shows red+Rupture / sand+Faible stock /
+              sage+42 en stock. Row 2 shows the same three dots with no
+              text — useful when the parent (e.g., a table cell) renders
+              its own count. Row 3 with threshold=10 promotes stock=8 from
+              &quot;in&quot; to &quot;low&quot; (still sand dot, &quot;Faible
+              stock&quot; label) — confirms threshold is doing what it says.
             </div>
           </section>
 
